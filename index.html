@@ -1037,6 +1037,28 @@
                 return visibleAlerts.filter(a => !seenAlertIds.includes(a.id)).length;
             }, [visibleAlerts, seenAlertIds]);
 
+            const latestVisibleAlerts = useRef(visibleAlerts);
+            useEffect(() => {
+                latestVisibleAlerts.current = visibleAlerts;
+            }, [visibleAlerts]);
+
+            const wasNotifMenuOpen = useRef(false);
+            useEffect(() => {
+                if (showNotifMenu) {
+                    wasNotifMenuOpen.current = true;
+                } else if (wasNotifMenuOpen.current) {
+                    wasNotifMenuOpen.current = false;
+                    const newSeen = latestVisibleAlerts.current.map(a => a.id);
+                    setSeenAlertIds(prev => Array.from(new Set([...prev, ...newSeen])));
+                }
+            }, [showNotifMenu, setSeenAlertIds]);
+
+            const displayAlerts = useMemo(() => {
+                const unread = visibleAlerts.filter(a => !seenAlertIds.includes(a.id)).reverse();
+                const read = visibleAlerts.filter(a => seenAlertIds.includes(a.id)).reverse();
+                return [...unread, ...read];
+            }, [visibleAlerts, seenAlertIds]);
+
             // --- FILTER LOGIC FOR RECENT ACTIVITY ---
             const filteredActivity = useMemo(() => {
                 let filtered = transactions;
@@ -1117,13 +1139,7 @@
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="relative" ref={notifMenuRef}>
-                            <button onClick={() => {
-                                setShowNotifMenu(!showNotifMenu);
-                                if (!showNotifMenu) {
-                                    const newSeen = visibleAlerts.map(a => a.id);
-                                    setSeenAlertIds(prev => Array.from(new Set([...prev, ...newSeen])));
-                                }
-                            }} className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-600 shadow-sm active:scale-90 relative">
+                            <button onClick={() => setShowNotifMenu(!showNotifMenu)} className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-600 shadow-sm active:scale-90 relative">
                                 <Icon name="Bell" size={20} />
                                 {unreadCount > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 flex items-center justify-center px-1 bg-red-500 text-white text-[10px] font-black rounded-full border-2 border-white shadow-sm animate-bounce">{unreadCount > 99 ? '99+' : unreadCount}</span>}
                             </button>
@@ -1142,15 +1158,21 @@
                                                 <p className="text-[10px] font-bold uppercase tracking-widest">No New Alerts</p>
                                             </div>
                                         ) : (
-                                            [...visibleAlerts].reverse().map(a => (
-                                                <div key={a.id} className="p-2 bg-white rounded-xl border border-slate-100 flex items-start gap-2 shadow-sm">
-                                                    <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${a.type === 'oos' ? 'bg-red-500' : a.type === 'low' ? 'bg-orange-500' : 'bg-blue-500'}`}></div>
-                                                    <div className="flex-1 min-w-0 pr-1">
-                                                        <p className="text-xs font-bold text-slate-800 leading-tight truncate">{a.name}</p>
-                                                        <p className={`text-[10px] font-bold mt-0.5 ${a.type === 'oos' ? 'text-red-600' : a.type === 'low' ? 'text-orange-600' : 'text-blue-600'}`}>{a.msg}</p>
+                                            displayAlerts.map(a => {
+                                                const isUnread = !seenAlertIds.includes(a.id);
+                                                return (
+                                                    <div key={a.id} className={`p-2 bg-white rounded-xl border flex items-start gap-2 shadow-sm transition-all ${isUnread ? 'border-blue-200 bg-blue-50/40' : 'border-slate-100'}`}>
+                                                        <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${a.type === 'oos' ? 'bg-red-500' : a.type === 'low' ? 'bg-orange-500' : 'bg-blue-500'}`}></div>
+                                                        <div className="flex-1 min-w-0 pr-1">
+                                                            <p className="text-xs font-bold text-slate-800 leading-tight truncate">{a.name}</p>
+                                                            <p className={`text-[10px] font-bold mt-0.5 ${a.type === 'oos' ? 'text-red-600' : a.type === 'low' ? 'text-orange-600' : 'text-blue-600'}`}>{a.msg}</p>
+                                                        </div>
+                                                        {isUnread && (
+                                                            <span className="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded-md font-black uppercase tracking-widest mt-0.5 shrink-0 animate-pulse">New</span>
+                                                        )}
                                                     </div>
-                                                </div>
-                                            ))
+                                                );
+                                            })
                                         )}
                                     </div>
                                 </div>
