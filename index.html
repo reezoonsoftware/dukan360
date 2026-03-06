@@ -1002,8 +1002,10 @@
             
             // --- NEW STATES FOR RECENT ACTIVITY SEARCH & FILTERS ---
             const [activitySearch, setActivitySearch] = useState("");
-            const [activityDateFilter, setActivityDateFilter] = useState("today");
+            const [activityDateFilter, setActivityDateFilter] = useState("all");
             const [activityTypeFilter, setActivityTypeFilter] = useState("all");
+            const [activityCustomStart, setActivityCustomStart] = useState(getIsoDate());
+            const [activityCustomEnd, setActivityCustomEnd] = useState(getIsoDate());
 
             const dashFilterRef = useRef(null);
             const notifMenuRef = useRef(null);
@@ -1058,6 +1060,8 @@
                 } else if (activityDateFilter === 'thisMonth') {
                     const month = today.substring(0, 7);
                     filtered = filtered.filter(t => t.date.startsWith(month));
+                } else if (activityDateFilter === 'custom') {
+                    filtered = filtered.filter(t => t.date >= activityCustomStart && t.date <= activityCustomEnd);
                 }
 
                 if (activityTypeFilter !== 'all') {
@@ -1065,7 +1069,7 @@
                 }
 
                 return filtered;
-            }, [transactions, activitySearch, activityDateFilter, activityTypeFilter]);
+            }, [transactions, activitySearch, activityDateFilter, activityTypeFilter, activityCustomStart, activityCustomEnd]);
 
             useEffect(() => {
                 const handleClickOutside = (e) => {
@@ -1124,7 +1128,7 @@
                                 {unreadCount > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 flex items-center justify-center px-1 bg-red-500 text-white text-[10px] font-black rounded-full border-2 border-white shadow-sm animate-bounce">{unreadCount > 99 ? '99+' : unreadCount}</span>}
                             </button>
                             {showNotifMenu && (
-                                <div className="absolute top-12 right-0 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 z-[100] overflow-hidden flex flex-col max-h-96 animate-in zoom-in duration-100 origin-top-right">
+                                <div className="absolute top-12 right-0 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 z-[100] overflow-hidden flex flex-col max-h-[320px] animate-in zoom-in duration-100 origin-top-right">
                                     <div className="p-3 border-b flex justify-between items-center bg-slate-50 shrink-0">
                                         <h3 className="font-bold text-sm text-slate-800">Notifications</h3>
                                         {visibleAlerts.length > 0 && (
@@ -1138,7 +1142,7 @@
                                                 <p className="text-[10px] font-bold uppercase tracking-widest">No New Alerts</p>
                                             </div>
                                         ) : (
-                                            visibleAlerts.map(a => (
+                                            [...visibleAlerts].reverse().map(a => (
                                                 <div key={a.id} className="p-2 bg-white rounded-xl border border-slate-100 flex items-start gap-2 shadow-sm">
                                                     <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${a.type === 'oos' ? 'bg-red-500' : a.type === 'low' ? 'bg-orange-500' : 'bg-blue-500'}`}></div>
                                                     <div className="flex-1 min-w-0 pr-1">
@@ -1284,6 +1288,7 @@
                                     <option value="yesterday">Yesterday</option>
                                     <option value="thisMonth">This Month</option>
                                     <option value="all">All Time</option>
+                                    <option value="custom">Custom Date</option>
                                 </select>
                                 <select 
                                     value={activityTypeFilter}
@@ -1300,6 +1305,18 @@
                                     <option value="purchase_return">Purchase Return</option>
                                 </select>
                             </div>
+                            {activityDateFilter === 'custom' && (
+                                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 animate-in slide-in-from-top duration-300">
+                                    <div>
+                                        <label className="text-[8px] font-black text-slate-400 uppercase ml-1 block mb-0.5">From</label>
+                                        <input type="date" value={activityCustomStart} onChange={(e) => setActivityCustomStart(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-2 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-400" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[8px] font-black text-slate-400 uppercase ml-1 block mb-0.5">To</label>
+                                        <input type="date" value={activityCustomEnd} onChange={(e) => setActivityCustomEnd(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-2 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-blue-400" />
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="space-y-2">
@@ -1369,7 +1386,7 @@
             );
         };
 
-        const LedgerView = ({ contact, transactions, shopName, onBack, onPaymentAction, onDeleteTransaction, onViewBill, onDeleteAccount, onEditAccount, onToggleInactive }) => {
+        const LedgerView = ({ contact, transactions, shopName, shopPhone, onBack, onPaymentAction, onDeleteTransaction, onViewBill, onDeleteAccount, onEditAccount, onToggleInactive }) => {
             const [filterStart, setFilterStart] = useState(""); const [filterEnd, setFilterEnd] = useState(""); const [showSearch, setShowSearch] = useState(false); const [showActionMenu, setShowActionMenu] = useState(false); const [showMissingPhoneModal, setShowMissingPhoneModal] = useState(false); const lActionRef = useRef(null);
 
             useEffect(() => {
@@ -1393,7 +1410,18 @@
                 }
                 const cleanNum = formatPhoneForWA(contact.phone);
                 if (type === 'whatsapp') {
-                    window.open(`https://wa.me/${cleanNum}`, '_blank');
+                    let balanceMsg = "";
+                    if (contact.balance < 0) {
+                        balanceMsg = `Aap ke zimme Rs. ${Math.abs(contact.balance)} baqi hai. Meherbani karke jald adaigi kar dein.`;
+                    } else if (contact.balance > 0) {
+                        balanceMsg = `Hum ne aap ke Rs. ${Math.abs(contact.balance)} dene hain. Jald adaigi kar di jayegi.`;
+                    } else {
+                        balanceMsg = `Aap ka hisaab bilkul clear hai.`;
+                    }
+
+                    const rawMsg = `Dear ${contact.name},\n\n${balanceMsg} Shukriya!\n\n*${shopName || "Business"}*\n${shopPhone ? '📞 ' + shopPhone : ''}`;
+                    const encodedMsg = encodeURIComponent(rawMsg);
+                    window.open(`https://wa.me/${cleanNum}?text=${encodedMsg}`, '_blank');
                 } else {
                     window.location.href = `tel:+${cleanNum}`;
                 }
@@ -2923,7 +2951,7 @@
                     <div ref={mainScrollRef} className="flex-1 overflow-y-auto pb-28 no-scrollbar">
                         {activeTab === 'dashboard' && <Dashboard statsGroups={dashboardStats} ownerName={ownerName} currentFilter={dashFilter} setFilter={setDashFilter} customStart={dashCustomStart} setCustomStart={setDashCustomStart} customEnd={dashCustomEnd} setCustomEnd={setDashCustomEnd} transactions={transactionsList} onEdit={handleEditTx} onDelete={(t) => { setTxToDelete(t); setIsDeleteTxModalOpen(true); }} onViewBill={setSelectedViewTx} onStatClick={(t, f) => { if (t === 'products') { navigateToTab('products', f); } else { setContactListTab(t === 'viewSuppliers' ? 'supplier' : 'customer'); navigateToTab('ledgers'); } }} isRomanUrduEnabled={isRomanUrduEnabled} onAddExpense={() => setIsExpenseModalOpen(true)} subscription={subscription} isSubscriptionActive={isSubscriptionActive} daysLeft={daysLeft} isPrinterConnected={isPrinterConnected} isInvoicePreviewEnabled={isInvoicePreviewEnabled} productsList={productsList} />}
                         {activeTab === 'pos' && (<POS productsList={productsList} addToCart={addToCart} cart={cart} cartTotal={cartTotal} setIsCheckoutModalOpen={setIsCheckoutModalOpen} posMode={posMode} setPosMode={setPosMode} isWholesaleEnabled={isWholesaleEnabled} isWholesaleMode={isWholesaleMode} setIsWholesaleMode={setIsWholesaleMode} isEditing={!!editingTxId} onCancelEdit={handleCancelEdit} setActiveTab={setActiveTab} categories={categories} query={posQuery} setQuery={setPosQuery} activeCategory={posActiveCategory} setActiveCategory={setPosActiveCategory} setStockError={setStockError} showHeader={showHeader} />)}
-                        {activeTab === 'ledgers' && (activeContact ? <LedgerView contact={activeContact} transactions={transactionsList} shopName={shopName} onBack={() => { setSelectedLedger(null); handleCancelEdit(); }} onDeleteTransaction={(t) => { setTxToDelete(t); setIsDeleteTxModalOpen(true); }} onPaymentAction={(type, editTx) => { if (editTx) handleEditTx(editTx); else { setLedgerActionType(type); setIsLedgerActionModalOpen(true); } }} onViewBill={setSelectedViewTx} onDeleteAccount={(id) => { if (transactionsList.some(t => t.contactId === id)) setStockError("Is account ko delete nahi kiya ja sakta, deactivate karein."); else { setAccountToDeleteId(id); setIsDeleteAccountModalOpen(true); } }} onEditAccount={(c) => { setContactToEdit(c); setIsEditContactModalOpen(true); }} onToggleInactive={handleToggleInactive} /> : <LedgersSection contactsList={contactsList} setIsAddContactModalOpen={setIsAddContactModalOpen} setSelectedLedger={setSelectedLedger} contactListTab={contactListTab} setContactListTab={setContactListTab} onToggleInactive={handleToggleInactive} />)}
+                        {activeTab === 'ledgers' && (activeContact ? <LedgerView contact={activeContact} transactions={transactionsList} shopName={shopName} shopPhone={shopPhone} onBack={() => { setSelectedLedger(null); handleCancelEdit(); }} onDeleteTransaction={(t) => { setTxToDelete(t); setIsDeleteTxModalOpen(true); }} onPaymentAction={(type, editTx) => { if (editTx) handleEditTx(editTx); else { setLedgerActionType(type); setIsLedgerActionModalOpen(true); } }} onViewBill={setSelectedViewTx} onDeleteAccount={(id) => { if (transactionsList.some(t => t.contactId === id)) setStockError("Is account ko delete nahi kiya ja sakta, deactivate karein."); else { setAccountToDeleteId(id); setIsDeleteAccountModalOpen(true); } }} onEditAccount={(c) => { setContactToEdit(c); setIsEditContactModalOpen(true); }} onToggleInactive={handleToggleInactive} /> : <LedgersSection contactsList={contactsList} setIsAddContactModalOpen={setIsAddContactModalOpen} setSelectedLedger={setSelectedLedger} contactListTab={contactListTab} setContactListTab={setContactListTab} onToggleInactive={handleToggleInactive} />)}
                         {activeTab === 'products' && (<ProductSection productsList={productsList} setProductsList={setProductsList} stockFilter={stockFilter} setStockFilter={setStockFilter} setIsAddModalOpen={setIsAddModalOpen} resetProductForm={resetProductForm} handleEditProduct={(p) => { setEditingProduct(p); setItemName(p.name || ""); setBarcode(p.barcode || ""); setPurchasePrice(p.purchasePrice || ""); setSalePrice(p.salePrice || ""); setWholesalePrice(p.wholesalePrice || ""); setOpeningStock(p.openingStock || ""); setMinStock(p.minStock || ""); setExpiryDate(p.expiryDate || ""); setProductImage(p.image || null); setProductCategoryId(String(p.categoryId || "all")); setIsAddModalOpen(true); }} categories={categories} setCategories={setCategories} pQuery={prodQuery} setPQuery={setProdQuery} activeCategory={prodActiveCategory} setActiveCategory={setProdActiveCategory} onPerformanceOpen={() => setActiveTab('performance')} showHeader={showHeader} />)}
                         {activeTab === 'performance' && (<PerformanceSection transactions={transactionsList} products={productsList} categories={categories} isRomanUrdu={isRomanUrduEnabled} onBack={() => setActiveTab('products')} />)}
                         {activeTab === 'settings' && (
