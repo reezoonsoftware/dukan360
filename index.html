@@ -1523,9 +1523,6 @@
                     <div className="px-4 space-y-4 no-scrollbar">
                         {contactTx.length === 0 ? (<div className="py-20 text-center opacity-30"><Icon name="Inbox" size={48} /><p className="font-bold text-sm">Koi record nahi mila.</p></div>) : (contactTx.map(t => { const total = t.amount; const paid = t.paidAmount || 0; const remaining = total - paid; const isPos = t.type === 'sale' || t.type === 'purchase' || t.type === 'sale_return' || t.type === 'purchase_return'; return (<div key={t.id} onClick={() => (t.type !== 'expense' && onViewBill(t))} className="bg-white p-3 rounded-2xl border-2 border-slate-50 active:border-blue-100 transition-all shadow-sm"><div className="flex justify-between items-start mb-2"><div className="flex-1 min-w-0 pr-2"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.date} • {t.time}</p><h4 className="text-sm font-bold text-slate-800 capitalize flex items-center gap-2">{t.type === 'receipt' ? 'Recovery' : (t.type === 'payment' ? 'Payment' : t.type.replace('_', ' '))} {isPos && <span className="bg-slate-100 text-slate-500 text-[8px] px-1.5 rounded-full font-black uppercase">Bill# {t.id}</span>}</h4></div><div className="flex gap-1"><button onClick={(e) => { e.stopPropagation(); onPaymentAction(t.type, t); }} className="text-amber-500 bg-amber-50 p-2 rounded-lg active:scale-90"><Icon name="Pencil" size={12} /></button><button onClick={(e) => { e.stopPropagation(); onDeleteTransaction(t); }} className="text-red-500 bg-red-50 p-2 rounded-lg active:scale-90"><Icon name="Trash2" size={12} /></button></div></div>{isPos ? (<div className="grid grid-cols-3 gap-2 bg-slate-50/80 p-2 rounded-xl border border-slate-100 mt-2"><div className="text-center border-r border-slate-200"><p className="text-[8px] font-bold text-slate-400 uppercase">Total Bill</p><p className="text-[11px] font-black text-slate-700">Rs. {formatAmount(total)}</p></div><div className="text-center border-r border-slate-200"><p className="text-[8px] font-bold text-slate-400 uppercase">Paid</p><p className="text-[11px] font-black text-blue-600">Rs. {formatAmount(paid)}</p></div><div className="text-center"><p className="text-[8px] font-bold text-slate-400 uppercase">Baqaya</p><p className={`text-[11px] font-black ${remaining > 0 ? 'text-red-500' : 'text-green-500'}`}>Rs. {formatAmount(remaining)}</p></div></div>) : (<div className="flex justify-between items-center px-2 py-1 bg-slate-50/30 rounded-lg"><p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Amount</p><p className={`font-black text-sm ${(t.type === 'sale' || t.type === 'receipt') ? 'text-green-600' : 'text-red-600'}`}>Rs. {formatAmount(total)}</p></div>)}{t.description && (<p className="text-[10px] text-slate-500 font-bold mt-2 italic flex items-center gap-1"><Icon name="Notebook" size={10} /> {t.description}</p>)}</div>); }))}
                     </div>
-                    <div className="px-4 space-y-4 no-scrollbar">
-                        {contactTx.length === 0 ? (<div className="py-20 text-center opacity-30"><Icon name="Inbox" size={48} /><p className="font-bold text-sm">Koi record nahi mila.</p></div>) : (contactTx.map(t => { const total = t.amount; const paid = t.paidAmount || 0; const remaining = total - paid; const isPos = t.type === 'sale' || t.type === 'purchase' || t.type === 'sale_return' || t.type === 'purchase_return'; return (<div key={t.id} onClick={() => (t.type !== 'expense' && onViewBill(t))} className="bg-white p-3 rounded-2xl border-2 border-slate-50 active:border-blue-100 transition-all shadow-sm"><div className="flex justify-between items-start mb-2"><div className="flex-1 min-w-0 pr-2"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.date} • {t.time}</p><h4 className="text-sm font-bold text-slate-800 capitalize flex items-center gap-2">{t.type === 'receipt' ? 'Recovery' : (t.type === 'payment' ? 'Payment' : t.type.replace('_', ' '))} {isPos && <span className="bg-slate-100 text-slate-500 text-[8px] px-1.5 rounded-full font-black uppercase">Bill# {t.id}</span>}</h4></div><div className="flex gap-1"><button onClick={(e) => { e.stopPropagation(); onPaymentAction(t.type, t); }} className="text-amber-500 bg-amber-50 p-2 rounded-lg active:scale-90"><Icon name="Pencil" size={12} /></button><button onClick={(e) => { e.stopPropagation(); onDeleteTransaction(t); }} className="text-red-500 bg-red-50 p-2 rounded-lg active:scale-90"><Icon name="Trash2" size={12} /></button></div></div>{isPos ? (<div className="grid grid-cols-3 gap-2 bg-slate-50/80 p-2 rounded-xl border border-slate-100 mt-2"><div className="text-center border-r border-slate-200"><p className="text-[8px] font-bold text-slate-400 uppercase">Total Bill</p><p className="text-[11px] font-black text-slate-700">Rs. {total}</p></div><div className="text-center border-r border-slate-200"><p className="text-[8px] font-bold text-slate-400 uppercase">Paid</p><p className="text-[11px] font-black text-blue-600">Rs. {paid}</p></div><div className="text-center"><p className="text-[8px] font-bold text-slate-400 uppercase">Baqaya</p><p className={`text-[11px] font-black ${remaining > 0 ? 'text-red-500' : 'text-green-500'}`}>Rs. {remaining}</p></div></div>) : (<div className="flex justify-between items-center px-2 py-1 bg-slate-50/30 rounded-lg"><p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Amount</p><p className={`font-black text-sm ${(t.type === 'sale' || t.type === 'receipt') ? 'text-green-600' : 'text-red-600'}`}>Rs. {total}</p></div>)}{t.description && (<p className="text-[10px] text-slate-500 font-bold mt-2 italic flex items-center gap-1"><Icon name="Notebook" size={10} /> {t.description}</p>)}</div>); }))}
-                    </div>
                     <div className="fixed bottom-24 left-4 right-4 grid grid-cols-2 gap-3">
                         <button onClick={() => onPaymentAction('receipt')} className="bg-green-600 text-white py-2 rounded-2xl font-bold shadow-lg uppercase text-xs active:scale-95 flex items-center justify-center">
                             <span className="text-2xl font-black mr-2 pb-1">+</span> Maine Liye
@@ -1733,7 +1730,7 @@
                                 <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 border-t pt-2 border-slate-200">
                                     {['all', 'outofstock', 'lowstock', 'nearexpiry'].map(f => (
                                         <button key={f} onClick={() => setStockFilter(f)} className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase border transition-all whitespace-nowrap ${stockFilter === f ? 'bg-blue-100 text-blue-700 border-blue-200 shadow-inner' : 'bg-white text-slate-400 border-slate-200'}`}>
-                                            {f === 'all' ? 'All' : f === 'outofstock' ? 'Out Stock' : f === 'lowstock' ? 'Low Stock' : 'Near Exp.'}
+                                            {f === 'all' ? 'All' : f === 'outofstock' ? 'Out of Stock' : f === 'lowstock' ? 'Low Stock' : 'Near Exp.'}
                                         </button>
                                     ))}
                                 </div>
@@ -2640,7 +2637,11 @@
                 setProdActiveCategory("all");
                 setStockFilter(initialFilter || "all");
                 if (tabName !== 'dashboard') setDashFilter("today");
-                if (tabName === 'ledgers') { setSelectedLedger(null); setEditingTxId(null); }
+                if (tabName === 'ledgers') { 
+                    setSelectedLedger(null); 
+                    setEditingTxId(null); 
+                    setContactListTab('customer'); // Reset to customer tab automatically
+                }
                 else if (tabName === 'settings') setSettingsView('main');
                 else if (tabName === 'products') { if (!initialFilter) resetProductForm(); }
                 else if (tabName === 'pos') { setPosMode('sale'); if (editingTxId) setEditingTxId(null); }
@@ -2674,6 +2675,8 @@
                 const wasoolCashRaw = receipts.reduce((a, b) => a + b.amount, 0);
                 const adaCashRaw = payments.reduce((a, b) => a + b.amount, 0);
                 const expensesAmt = expenses.reduce((a, b) => a + b.amount, 0);
+
+                const displayPaymentAmount = adaCashRaw + cashPurchaseRaw;
 
                 const cashSaleNet = cashSaleRaw - srCashAmt;
                 const creditSaleNet = creditSaleRaw - srCreditAmt;
@@ -2719,7 +2722,7 @@
                         { label: `Cash Purchase ${labelSuffix}`, romanUrdu: "Naqd khareedari (Net)", value: `Rs. ${formatAmount(cashPurchaseNet)}`, bg: 'bg-blue-50', labelColor: 'text-blue-700' },
                         { label: `Credit Purchase ${labelSuffix}`, romanUrdu: "Udhaar khareedari (Net)", value: `Rs. ${formatAmount(creditPurchaseNet)}`, bg: 'bg-indigo-50', labelColor: 'text-indigo-700' },
                         { label: `Recovery ${labelSuffix}`, romanUrdu: "Naqd wasooli", value: `Rs. ${formatAmount(wasoolCashRaw)}`, bg: 'bg-emerald-50', labelColor: 'text-emerald-700' },
-                        { label: `Payment ${labelSuffix}`, romanUrdu: "Naqd adaigi", value: `Rs. ${formatAmount(adaCashRaw)}`, bg: 'bg-rose-50', labelColor: 'text-rose-700' },
+                        { label: `Payment ${labelSuffix}`, romanUrdu: "Naqd adaigi", value: `Rs. ${formatAmount(displayPaymentAmount)}`, bg: 'bg-rose-50', labelColor: 'text-rose-700' },
                         { label: `Expense ${labelSuffix}`, romanUrdu: "Akhrajaat", value: `Rs. ${formatAmount(expensesAmt)}`, bg: 'bg-red-50', labelColor: 'text-red-700' },
                         { label: `Net Profit ${labelSuffix}`, romanUrdu: "Munafa (Baghair Kharch)", value: `Rs. ${formatAmount(netProfit)}`, bg: 'bg-teal-50', labelColor: 'text-teal-700', subNote: "Without Exp" },
                         { label: `Cash In Hand ${labelSuffix}`, romanUrdu: "Dukan mein bacha cash", value: `Rs. ${formatAmount(closingBalance)}`, bg: 'bg-blue-50', labelColor: 'text-blue-900' }
@@ -2731,7 +2734,7 @@
                     inventory: [
                         { label: 'Total Items', romanUrdu: "Kul saamaan", value: productsList.length, bg: 'bg-slate-100', labelColor: 'text-slate-600', target: 'products', filter: 'all' },
                         { label: 'Low Stock', romanUrdu: "Kam stock wala maal", value: productsList.filter(p => p.openingStock > 0 && p.openingStock <= (p.minStock || 0)).length, bg: 'bg-orange-50', labelColor: 'text-orange-700', target: 'products', filter: 'lowstock' },
-                        { label: 'Out Stock', romanUrdu: "Jo maal khatam hai", value: productsList.filter(p => p.openingStock <= 0).length, bg: 'bg-red-100', labelColor: 'text-red-700', target: 'products', filter: 'outofstock' },
+                        { label: 'Out of Stock', romanUrdu: "Jo maal khatam hai", value: productsList.filter(p => p.openingStock <= 0).length, bg: 'bg-red-100', labelColor: 'text-red-700', target: 'products', filter: 'outofstock' },
                         { label: 'Near Exp (15d)', romanUrdu: "Kharaab honay wala maal", value: productsList.filter(p => isNearExpiry(p.expiryDate)).length, bg: 'bg-orange-100', labelColor: 'text-orange-700', target: 'products', filter: 'nearexpiry' }
                     ],
                     valuation: [
