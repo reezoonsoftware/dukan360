@@ -72,21 +72,26 @@
 
         /* Print Specific Styles */
         @media print {
-            body, html {
+
+            body,
+            html {
                 background: white !important;
                 height: auto !important;
             }
-            #root > div {
+
+            #root>div {
                 height: auto !important;
                 overflow: visible !important;
                 border: none !important;
                 box-shadow: none !important;
                 max-width: none !important;
             }
-            #root > div > * {
+
+            #root>div>* {
                 display: none !important;
             }
-            #root > div > .print-modal {
+
+            #root>div>.print-modal {
                 display: block !important;
                 position: absolute !important;
                 left: 0 !important;
@@ -96,22 +101,26 @@
                 background: white !important;
                 backdrop-filter: none !important;
             }
-            .print-modal > div {
+
+            .print-modal>div {
                 border-radius: 0 !important;
                 box-shadow: none !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 border: none !important;
             }
+
             .print-hide {
                 display: none !important;
             }
+
             .print-scroll-fix {
                 overflow: visible !important;
                 max-height: none !important;
                 background: white !important;
                 padding: 0 !important;
             }
+
             #printable-invoice {
                 margin: 0 auto !important;
                 box-shadow: none !important;
@@ -1053,7 +1062,7 @@
             const [showNotifMenu, setShowNotifMenu] = useState(false);
             const [isClearNotifModalOpen, setIsClearNotifModalOpen] = useState(false);
             const [visibleTxCount, setVisibleTxCount] = useState(10);
-            
+
             // --- NEW STATES FOR RECENT ACTIVITY SEARCH & FILTERS ---
             const [activitySearch, setActivitySearch] = useState("");
             const [activityDateFilter, setActivityDateFilter] = useState("all");
@@ -1119,7 +1128,7 @@
 
                 if (activitySearch) {
                     const lowerQuery = activitySearch.toLowerCase();
-                    filtered = filtered.filter(t => 
+                    filtered = filtered.filter(t =>
                         (t.contactName && t.contactName.toLowerCase().includes(lowerQuery)) ||
                         (t.description && t.description.toLowerCase().includes(lowerQuery)) ||
                         (t.id && String(t.id).toLowerCase().includes(lowerQuery))
@@ -1185,60 +1194,60 @@
                                     subscription && subscription.status === 'trial' && (
                                         <div className="bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
                                             <Icon name="Clock" size={10} className="text-amber-600" />
-                                        <span className="text-[9px] font-black text-amber-700 uppercase tracking-wide">Trial: {daysLeft} Din Baqi</span>
-                                    </div>
-                                )
-                            )}
+                                            <span className="text-[9px] font-black text-amber-700 uppercase tracking-wide">Trial: {daysLeft} Din Baqi</span>
+                                        </div>
+                                    )
+                                )}
+                            </div>
                         </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="relative" ref={notifMenuRef}>
-                            <button onClick={() => setShowNotifMenu(!showNotifMenu)} className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-600 shadow-sm active:scale-90 relative">
-                                <Icon name="Bell" size={20} />
-                                {unreadCount > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 flex items-center justify-center px-1 bg-red-500 text-white text-[10px] font-black rounded-full border-2 border-white shadow-sm animate-bounce">{unreadCount > 99 ? '99+' : unreadCount}</span>}
-                            </button>
-                            {showNotifMenu && (
-                                <div className="absolute top-12 right-0 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 z-[100] overflow-hidden flex flex-col max-h-[320px] animate-in zoom-in duration-100 origin-top-right">
-                                    <div className="p-3 border-b flex justify-between items-center bg-slate-50 shrink-0">
-                                        <h3 className="font-bold text-sm text-slate-800">Notifications</h3>
-                                        {visibleAlerts.length > 0 && (
-                                            <button onClick={() => setIsClearNotifModalOpen(true)} className="text-[10px] font-bold text-red-500 hover:text-red-600 bg-red-50 px-2 py-1 rounded-md active:scale-95">Clear All</button>
-                                        )}
-                                    </div>
-                                    <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-2">
-                                        {visibleAlerts.length === 0 ? (
-                                            <div className="py-6 text-center opacity-40">
-                                                <Icon name="BellOff" size={32} className="mx-auto mb-2" />
-                                                <p className="text-[10px] font-bold uppercase tracking-widest">No New Alerts</p>
-                                            </div>
-                                        ) : (
-                                            displayAlerts.map(a => {
-                                                const isUnread = !seenAlertIds.includes(a.id);
-                                                return (
-                                                    <div key={a.id} className={`p-2 bg-white rounded-xl border flex items-start gap-2 shadow-sm transition-all ${isUnread ? 'border-blue-200 bg-blue-50/40' : 'border-slate-100'}`}>
-                                                        <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${a.type === 'oos' ? 'bg-red-500' : a.type === 'low' ? 'bg-orange-500' : 'bg-blue-500'}`}></div>
-                                                        <div className="flex-1 min-w-0 pr-1">
-                                                            <p className="text-xs font-bold text-slate-800 leading-tight truncate">{a.name}</p>
-                                                            <p className={`text-[10px] font-bold mt-0.5 ${a.type === 'oos' ? 'text-red-600' : a.type === 'low' ? 'text-orange-600' : 'text-blue-600'}`}>{a.msg}</p>
+                        <div className="flex items-center gap-2">
+                            <div className="relative" ref={notifMenuRef}>
+                                <button onClick={() => setShowNotifMenu(!showNotifMenu)} className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-600 shadow-sm active:scale-90 relative">
+                                    <Icon name="Bell" size={20} />
+                                    {unreadCount > 0 && <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 flex items-center justify-center px-1 bg-red-500 text-white text-[10px] font-black rounded-full border-2 border-white shadow-sm animate-bounce">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+                                </button>
+                                {showNotifMenu && (
+                                    <div className="absolute top-12 right-0 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 z-[100] overflow-hidden flex flex-col max-h-[320px] animate-in zoom-in duration-100 origin-top-right">
+                                        <div className="p-3 border-b flex justify-between items-center bg-slate-50 shrink-0">
+                                            <h3 className="font-bold text-sm text-slate-800">Notifications</h3>
+                                            {visibleAlerts.length > 0 && (
+                                                <button onClick={() => setIsClearNotifModalOpen(true)} className="text-[10px] font-bold text-red-500 hover:text-red-600 bg-red-50 px-2 py-1 rounded-md active:scale-95">Clear All</button>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-2">
+                                            {visibleAlerts.length === 0 ? (
+                                                <div className="py-6 text-center opacity-40">
+                                                    <Icon name="BellOff" size={32} className="mx-auto mb-2" />
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest">No New Alerts</p>
+                                                </div>
+                                            ) : (
+                                                displayAlerts.map(a => {
+                                                    const isUnread = !seenAlertIds.includes(a.id);
+                                                    return (
+                                                        <div key={a.id} className={`p-2 bg-white rounded-xl border flex items-start gap-2 shadow-sm transition-all ${isUnread ? 'border-blue-200 bg-blue-50/40' : 'border-slate-100'}`}>
+                                                            <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${a.type === 'oos' ? 'bg-red-500' : a.type === 'low' ? 'bg-orange-500' : 'bg-blue-500'}`}></div>
+                                                            <div className="flex-1 min-w-0 pr-1">
+                                                                <p className="text-xs font-bold text-slate-800 leading-tight truncate">{a.name}</p>
+                                                                <p className={`text-[10px] font-bold mt-0.5 ${a.type === 'oos' ? 'text-red-600' : a.type === 'low' ? 'text-orange-600' : 'text-blue-600'}`}>{a.msg}</p>
+                                                            </div>
+                                                            {isUnread && (
+                                                                <span className="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded-md font-black uppercase tracking-widest mt-0.5 shrink-0 animate-pulse">New</span>
+                                                            )}
                                                         </div>
-                                                        {isUnread && (
-                                                            <span className="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded-md font-black uppercase tracking-widest mt-0.5 shrink-0 animate-pulse">New</span>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })
-                                        )}
+                                                    );
+                                                })
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                        </div>
-                        <div className="relative" ref={dashFilterRef}>
-                            <button onClick={() => setShowFilterMenu(!showFilterMenu)} className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-600 shadow-sm active:scale-90 relative"><Icon name="Filter" size={20} /></button>
-                            {showFilterMenu && (<div className="absolute top-12 right-0 w-40 bg-white rounded-2xl shadow-xl border border-slate-100 z-[100] overflow-hidden py-1 animate-in zoom-in duration-100 origin-top-right">{['today', 'yesterday', 'month', 'custom'].map(f => (<div key={f} onClick={(e) => { e.stopPropagation(); setFilter(f); setShowFilterMenu(false); }} className={`px-4 py-2 text-xs font-bold capitalize hover:bg-slate-50 ${currentFilter === f ? 'text-blue-600 bg-blue-50/50' : 'text-slate-600'}`}>{f === 'month' ? 'This Month' : f}</div>))}</div>)}
+                                )}
+                            </div>
+                            <div className="relative" ref={dashFilterRef}>
+                                <button onClick={() => setShowFilterMenu(!showFilterMenu)} className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-600 shadow-sm active:scale-90 relative"><Icon name="Filter" size={20} /></button>
+                                {showFilterMenu && (<div className="absolute top-12 right-0 w-40 bg-white rounded-2xl shadow-xl border border-slate-100 z-[100] overflow-hidden py-1 animate-in zoom-in duration-100 origin-top-right">{['today', 'yesterday', 'month', 'custom'].map(f => (<div key={f} onClick={(e) => { e.stopPropagation(); setFilter(f); setShowFilterMenu(false); }} className={`px-4 py-2 text-xs font-bold capitalize hover:bg-slate-50 ${currentFilter === f ? 'text-blue-600 bg-blue-50/50' : 'text-slate-600'}`}>{f === 'month' ? 'This Month' : f}</div>))}</div>)}
+                            </div>
                         </div>
                     </div>
-                </div>
-                {currentFilter === 'custom' && (<div className="grid grid-cols-2 gap-2 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm animate-in slide-in-from-top duration-300"><div><label className="text-[8px] font-black text-slate-400 uppercase ml-1">From</label><input type="date" value={customStart || ""} onChange={(e) => setCustomStart(e.target.value)} className="w-full bg-slate-50 border border-slate-100 p-2 rounded-xl text-xs font-bold text-slate-700 outline-none" /></div><div><label className="text-[8px] font-black text-slate-400 uppercase ml-1">To</label><input type="date" value={customEnd || ""} onChange={(e) => setCustomEnd(e.target.value)} className="w-full bg-slate-50 border border-slate-100 p-2 rounded-xl text-xs font-bold text-slate-700 outline-none" /></div></div>)}
+                    {currentFilter === 'custom' && (<div className="grid grid-cols-2 gap-2 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm animate-in slide-in-from-top duration-300"><div><label className="text-[8px] font-black text-slate-400 uppercase ml-1">From</label><input type="date" value={customStart || ""} onChange={(e) => setCustomStart(e.target.value)} className="w-full bg-slate-50 border border-slate-100 p-2 rounded-xl text-xs font-bold text-slate-700 outline-none" /></div><div><label className="text-[8px] font-black text-slate-400 uppercase ml-1">To</label><input type="date" value={customEnd || ""} onChange={(e) => setCustomEnd(e.target.value)} className="w-full bg-slate-50 border border-slate-100 p-2 rounded-xl text-xs font-bold text-slate-700 outline-none" /></div></div>)}
 
                     <div className="space-y-4">
                         <h3 className="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-[0.15em]">Financial Summary {isRomanUrduEnabled && "(Maali Hisaab)"}</h3>
@@ -1342,20 +1351,20 @@
 
                     <div className="space-y-3 pb-8">
                         <h3 className="text-[11px] font-black uppercase text-slate-400 ml-1 tracking-[0.2em]">Recent Activity</h3>
-                        
+
                         <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm space-y-2">
                             <div className="relative">
                                 <Icon name="Search" size={16} className="absolute left-3 top-2.5 text-slate-400" />
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     value={activitySearch}
                                     onChange={(e) => setActivitySearch(e.target.value)}
-                                    placeholder="Search name, details or Bill#..." 
+                                    placeholder="Search name, details or Bill#..."
                                     className="w-full bg-slate-50 border border-slate-200 py-2 pl-9 pr-3 rounded-xl outline-none text-xs font-semibold focus:border-blue-400 transition-all"
                                 />
                             </div>
                             <div className="flex gap-2">
-                                <select 
+                                <select
                                     value={activityDateFilter}
                                     onChange={(e) => setActivityDateFilter(e.target.value)}
                                     className="flex-1 bg-slate-50 border border-slate-200 py-2 px-2 rounded-xl outline-none text-[10px] font-bold text-slate-600 focus:border-blue-400"
@@ -1366,7 +1375,7 @@
                                     <option value="all">All Time</option>
                                     <option value="custom">Custom Date</option>
                                 </select>
-                                <select 
+                                <select
                                     value={activityTypeFilter}
                                     onChange={(e) => setActivityTypeFilter(e.target.value)}
                                     className="flex-1 bg-slate-50 border border-slate-200 py-2 px-2 rounded-xl outline-none text-[10px] font-bold text-slate-600 focus:border-blue-400"
@@ -1730,7 +1739,7 @@
                                 <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 border-t pt-2 border-slate-200">
                                     {['all', 'outofstock', 'lowstock', 'nearexpiry'].map(f => (
                                         <button key={f} onClick={() => setStockFilter(f)} className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase border transition-all whitespace-nowrap ${stockFilter === f ? 'bg-blue-100 text-blue-700 border-blue-200 shadow-inner' : 'bg-white text-slate-400 border-slate-200'}`}>
-                                            {f === 'all' ? 'All' : f === 'outofstock' ? 'Out of Stock' : f === 'lowstock' ? 'Low Stock' : 'Near Exp.'}
+                                            {f === 'all' ? 'All' : f === 'outofstock' ? 'Out of Stock' : f === 'lowstock' ? 'Low Stock' : 'Near Expiry'}
                                         </button>
                                     ))}
                                 </div>
@@ -1782,7 +1791,7 @@
 
                 const pData = {
                     id: editingProduct ? editingProduct.id : Date.now(),
-                    name: itemName,
+                    name: itemName.trim(),
                     barcode: (barcode || "").trim(),
                     purchasePrice: pPrice,
                     avgCost: editingProduct ? (editingProduct.avgCost || editingProduct.purchasePrice) : pPrice,
@@ -2069,7 +2078,7 @@
             const [resetMsg, setResetMsg] = useState("");
 
             const [showPassword, setShowPassword] = useState(false);
-            
+
             // New state for Forgot Password Modal
             const [showForgotModal, setShowForgotModal] = useState(false);
             const [forgotEmail, setForgotEmail] = useState("");
@@ -2119,9 +2128,9 @@
                 setForgotStatus({ type: '', msg: '' });
                 try {
                     await auth.sendPasswordResetEmail(forgotEmail.trim());
-                    setForgotStatus({ 
-                        type: 'success', 
-                        msg: "Password reset link aapke email par bhej diya gaya hai. Baraye meherbani apna inbox check karein. (Agar na mile toh Spam folder zaroor dekhein)." 
+                    setForgotStatus({
+                        type: 'success',
+                        msg: "Password reset link aapke email par bhej diya gaya hai. Baraye meherbani apna inbox check karein. (Agar na mile toh Spam folder zaroor dekhein)."
                     });
                 } catch (err) {
                     setForgotStatus({ type: 'error', msg: mapError(err.message) });
@@ -2375,6 +2384,10 @@
             const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false); // New Modal for Blocked Actions
             const [contactErrors, setContactErrors] = useState({});
 
+            const [backupClicks, setBackupClicks] = useState(0);
+            const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
+            const clickTimeoutRef = useRef(null);
+
             const [ledgerActionType, setLedgerActionType] = useState('receipt');
             const [ledgerAmount, setLedgerAmount] = useState("");
             const [ledgerDesc, setLedgerDesc] = useState("");
@@ -2440,6 +2453,56 @@
                 setShowSuccessAnimation(true);
                 playBeep();
                 setTimeout(() => setShowSuccessAnimation(false), 900); // < 1 second animation
+            };
+
+            const handleSecretClick = () => {
+                setBackupClicks(prev => {
+                    const newVal = prev + 1;
+                    if (newVal >= 10) {
+                        setIsBackupModalOpen(true);
+                        return 0;
+                    }
+                    return newVal;
+                });
+                if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
+                clickTimeoutRef.current = setTimeout(() => setBackupClicks(0), 1000);
+            };
+
+            const handleExportBackup = () => {
+                const backupData = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    // Dukan360 ke sab keys include karein
+                    if (key.includes('gs_v4_')) {
+                        backupData[key] = localStorage.getItem(key);
+                    }
+                }
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", `Dukan360_Backup_${getIsoDate()}.json`);
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+            };
+
+            const handleImportBackup = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        for (const key in data) {
+                            localStorage.setItem(key, data[key]);
+                        }
+                        alert("Backup successfully restore ho gaya hai! App ab reload hogi.");
+                        window.location.reload();
+                    } catch (err) {
+                        alert("Backup file kharab hai ya format theek nahi.");
+                    }
+                };
+                reader.readAsText(file);
             };
 
             // New state for persisting card template selection
@@ -2578,10 +2641,10 @@
 
             useEffect(() => { if (!isWholesaleEnabled) setIsWholesaleMode(false); }, [isWholesaleEnabled]);
 
-            // Auto-switch opening balance type based on tab
+            // Auto-switch opening balance type based on tab and reset on modal open
             useEffect(() => {
                 setOpeningBalType(contactListTab === 'customer' ? 'receivable' : 'payable');
-            }, [contactListTab]);
+            }, [contactListTab, isAddContactModalOpen]);
 
             // --- Dynamic Cart Price Update ---
             useEffect(() => {
@@ -2602,7 +2665,7 @@
                                 newPrice = parseFloat(product.salePrice) || 0;
                             }
                         }
-                        
+
                         if (item.priceUsed !== newPrice) {
                             hasChanges = true;
                             return { ...item, priceUsed: newPrice };
@@ -2637,10 +2700,10 @@
                 setProdActiveCategory("all");
                 setStockFilter(initialFilter || "all");
                 if (tabName !== 'dashboard') setDashFilter("today");
-                if (tabName === 'ledgers') { 
-                    setSelectedLedger(null); 
-                    setEditingTxId(null); 
-                    setContactListTab('customer'); // Reset to customer tab automatically
+                if (tabName === 'ledgers') {
+                    setSelectedLedger(null);
+                    setEditingTxId(null);
+                    setContactListTab(initialFilter || 'customer');
                 }
                 else if (tabName === 'settings') setSettingsView('main');
                 else if (tabName === 'products') { if (!initialFilter) resetProductForm(); }
@@ -2706,7 +2769,7 @@
                     }, 0);
                     return acc + (txProfit - (t.discountAmount || 0));
                 }, 0);
-                
+
                 const netProfit = saleProfit - returnProfit;
 
                 const totalStockCostValue = productsList.reduce((a, b) => {
@@ -2724,7 +2787,7 @@
                         { label: `Recovery ${labelSuffix}`, romanUrdu: "Naqd wasooli", value: `Rs. ${formatAmount(wasoolCashRaw)}`, bg: 'bg-emerald-50', labelColor: 'text-emerald-700' },
                         { label: `Payment ${labelSuffix}`, romanUrdu: "Naqd adaigi", value: `Rs. ${formatAmount(displayPaymentAmount)}`, bg: 'bg-rose-50', labelColor: 'text-rose-700' },
                         { label: `Expense ${labelSuffix}`, romanUrdu: "Akhrajaat", value: `Rs. ${formatAmount(expensesAmt)}`, bg: 'bg-red-50', labelColor: 'text-red-700' },
-                        { label: `Net Profit ${labelSuffix}`, romanUrdu: "Munafa (Baghair Kharch)", value: `Rs. ${formatAmount(netProfit)}`, bg: 'bg-teal-50', labelColor: 'text-teal-700', subNote: "Without Exp" },
+                        { label: `Net Profit ${labelSuffix}`, romanUrdu: "Munafa (Baghair Kharch)", value: `Rs. ${formatAmount(netProfit)}`, bg: 'bg-teal-50', labelColor: 'text-teal-700' },
                         { label: `Cash In Hand ${labelSuffix}`, romanUrdu: "Dukan mein bacha cash", value: `Rs. ${formatAmount(closingBalance)}`, bg: 'bg-blue-50', labelColor: 'text-blue-900' }
                     ],
                     ledgers: [
@@ -2735,7 +2798,7 @@
                         { label: 'Total Items', romanUrdu: "Kul saamaan", value: productsList.length, bg: 'bg-slate-100', labelColor: 'text-slate-600', target: 'products', filter: 'all' },
                         { label: 'Low Stock', romanUrdu: "Kam stock wala maal", value: productsList.filter(p => p.openingStock > 0 && p.openingStock <= (p.minStock || 0)).length, bg: 'bg-orange-50', labelColor: 'text-orange-700', target: 'products', filter: 'lowstock' },
                         { label: 'Out of Stock', romanUrdu: "Jo maal khatam hai", value: productsList.filter(p => p.openingStock <= 0).length, bg: 'bg-red-100', labelColor: 'text-red-700', target: 'products', filter: 'outofstock' },
-                        { label: 'Near Exp (15d)', romanUrdu: "Kharaab honay wala maal", value: productsList.filter(p => isNearExpiry(p.expiryDate)).length, bg: 'bg-orange-100', labelColor: 'text-orange-700', target: 'products', filter: 'nearexpiry' }
+                        { label: 'Near Expiry (15d)', romanUrdu: "Kharaab honay wala maal", value: productsList.filter(p => isNearExpiry(p.expiryDate)).length, bg: 'bg-orange-100', labelColor: 'text-orange-700', target: 'products', filter: 'nearexpiry' }
                     ],
                     valuation: [
                         { label: 'Total (Cost)', romanUrdu: "Dukan mein kul sarmaya", value: `Rs. ${formatAmount(totalStockCostValue)}`, bg: 'bg-indigo-50', labelColor: 'text-indigo-700' },
@@ -2745,50 +2808,50 @@
                 };
             }, [transactionsList, productsList, contactsList, dashFilter, dashCustomStart, dashCustomEnd]);
 
-            const addToCart = (p, appliedPrice) => { 
+            const addToCart = (p, appliedPrice) => {
                 const isOutgoing = posMode === 'sale' || posMode === 'purchase_return';
-                if (isOutgoing && p.openingStock <= 0) { setStockError(`"${p.name}" ka stock khatam hai.`); return; } 
-                playClickSound(); 
-                const existing = cart.find(item => item.id === p.id); 
-                if (existing) { 
-                    const newQty = parseFloat(existing.quantity) + 1; 
-                    if (isOutgoing && newQty > p.openingStock) { setStockError(`Stock sirf ${p.openingStock} bacha hai.`); return; } 
-                    setCart(cart.map(item => item.id === p.id ? { ...item, quantity: newQty, priceUsed: appliedPrice } : item)); 
-                } else { 
-                    setCart([...cart, { ...p, quantity: 1, priceUsed: appliedPrice }]); 
-                } 
+                if (isOutgoing && p.openingStock <= 0) { setStockError(`"${p.name}" ka stock khatam hai.`); return; }
+                playClickSound();
+                const existing = cart.find(item => item.id === p.id);
+                if (existing) {
+                    const newQty = parseFloat(existing.quantity) + 1;
+                    if (isOutgoing && newQty > p.openingStock) { setStockError(`Stock sirf ${p.openingStock} bacha hai.`); return; }
+                    setCart(cart.map(item => item.id === p.id ? { ...item, quantity: newQty, priceUsed: appliedPrice } : item));
+                } else {
+                    setCart([...cart, { ...p, quantity: 1, priceUsed: appliedPrice }]);
+                }
             };
-            const updateCartQty = (id, delta) => { 
-                playClickSound(); 
-                setCart(prev => { 
-                    const existing = prev.find(item => item.id === id); 
-                    if (!existing) return prev; 
-                    const newQty = (parseFloat(existing.quantity) || 0) + delta; 
-                    if (newQty < 1) return prev.filter(item => item.id !== id); 
+            const updateCartQty = (id, delta) => {
+                playClickSound();
+                setCart(prev => {
+                    const existing = prev.find(item => item.id === id);
+                    if (!existing) return prev;
+                    const newQty = (parseFloat(existing.quantity) || 0) + delta;
+                    if (newQty < 1) return prev.filter(item => item.id !== id);
                     const isOutgoing = posMode === 'sale' || posMode === 'purchase_return';
-                    if (isOutgoing && delta > 0 && newQty > existing.openingStock) { setStockError(`Stock sirf ${existing.openingStock} bacha hai.`); return prev; } 
-                    return prev.map(item => item.id === id ? { ...item, quantity: newQty } : item); 
-                }); 
+                    if (isOutgoing && delta > 0 && newQty > existing.openingStock) { setStockError(`Stock sirf ${existing.openingStock} bacha hai.`); return prev; }
+                    return prev.map(item => item.id === id ? { ...item, quantity: newQty } : item);
+                });
             };
             const removeCartItem = (id) => { playClickSound(); setCart(prev => prev.filter(item => item.id !== id)); };
             const clearCart = () => { if (window.confirm('Clear cart?')) { setCart([]); setIsCheckoutModalOpen(false); } };
 
             const reverseTransaction = useCallback((txId) => {
                 const target = transactionsList.find(t => t.id === txId); if (!target) return;
-                if (target.items) { 
-                    setProductsList(productsList.map(p => { 
-                        const itemInTx = target.items.find(i => i.id === p.id); 
-                        if (itemInTx) { 
+                if (target.items) {
+                    setProductsList(productsList.map(p => {
+                        const itemInTx = target.items.find(i => i.id === p.id);
+                        if (itemInTx) {
                             const qty = parseFloat(itemInTx.quantity);
                             let stockAdj = 0;
                             if (target.type === 'sale') stockAdj = qty;
                             else if (target.type === 'purchase') stockAdj = -qty;
                             else if (target.type === 'sale_return') stockAdj = -qty;
                             else if (target.type === 'purchase_return') stockAdj = qty;
-                            return { ...p, openingStock: parseFloat(p.openingStock) + stockAdj }; 
-                        } 
-                        return p; 
-                    })); 
+                            return { ...p, openingStock: parseFloat(p.openingStock) + stockAdj };
+                        }
+                        return p;
+                    }));
                 }
                 if (target.contactId) {
                     setContactsList(prev => prev.map(c => {
@@ -2870,17 +2933,17 @@
                 const updatedProducts = currentProductsList.map(p => {
                     const cartItem = cart.find(item => p.id === item.id);
                     if (cartItem) {
-                        const currentStock = parseFloat(p.openingStock) || 0; 
-                        const addedStock = parseFloat(cartItem.quantity) || 0; 
-                        
+                        const currentStock = parseFloat(p.openingStock) || 0;
+                        const addedStock = parseFloat(cartItem.quantity) || 0;
+
                         let stockDelta = 0;
                         if (posMode === 'sale') stockDelta = -addedStock;
                         else if (posMode === 'purchase') stockDelta = addedStock;
                         else if (posMode === 'sale_return') stockDelta = addedStock;
                         else if (posMode === 'purchase_return') stockDelta = -addedStock;
-                        
+
                         const newStock = currentStock + stockDelta;
-                        
+
                         let calculatedAvgCost = parseFloat(p.avgCost) || parseFloat(p.purchasePrice) || 0;
                         if (posMode === 'purchase') {
                             const oldVal = currentStock * calculatedAvgCost; const newVal = addedStock * (parseFloat(cartItem.purchasePrice) || 0);
@@ -2922,7 +2985,7 @@
                             else if (posMode === 'purchase') balanceChange = effectiveDue;
                             else if (posMode === 'sale_return') balanceChange = effectiveDue;
                             else if (posMode === 'purchase_return') balanceChange = -effectiveDue;
-                            
+
                             return { ...c, balance: c.balance + balanceChange };
                         }
                         return c;
@@ -2986,7 +3049,7 @@
                 const actionId = editingTxId || invCounter;
                 if (!editingTxId) setInvCounter(prev => prev + 1);
 
-                const newTx = { id: actionId, type: ledgerActionType, contactId: activeContact.id, contactName: activeContact.name, amount, paidAmount: amount, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), date: getIsoDate(), description: ledgerDesc, paymentType: 'Credit' };
+                const newTx = { id: actionId, type: ledgerActionType, contactId: activeContact.id, contactName: activeContact.name, amount, paidAmount: amount, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), date: getIsoDate(), description: ledgerDesc.trim(), paymentType: 'Credit' };
 
                 let balAdj = 0;
                 if (ledgerActionType === 'receipt') balAdj = amount;
@@ -3008,7 +3071,7 @@
 
             const handleAddExpenseAction = () => {
                 if (!checkPermission()) return; // Block if expired
-                if (!expenseAmount || !expenseDesc) return; if (editingTxId) setTransactionsList(prev => prev.filter(t => t.id !== editingTxId)); const amount = parseFloat(expenseAmount); const actionId = editingTxId || invCounter; if (!editingTxId) setInvCounter(prev => prev + 1); const newTx = { id: actionId, type: 'expense', description: expenseDesc, amount, paidAmount: amount, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), date: expenseDate }; setTransactionsList(prev => [newTx, ...prev]); setExpenseAmount(""); setExpenseDesc(""); setExpenseDate(getIsoDate()); setEditingTxId(null); setIsExpenseModalOpen(false); triggerSuccess();
+                if (!expenseAmount || !expenseDesc) return; if (editingTxId) setTransactionsList(prev => prev.filter(t => t.id !== editingTxId)); const amount = parseFloat(expenseAmount); const actionId = editingTxId || invCounter; if (!editingTxId) setInvCounter(prev => prev + 1); const newTx = { id: actionId, type: 'expense', description: expenseDesc.trim(), amount, paidAmount: amount, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), date: expenseDate }; setTransactionsList(prev => [newTx, ...prev]); setExpenseAmount(""); setExpenseDesc(""); setExpenseDate(getIsoDate()); setEditingTxId(null); setIsExpenseModalOpen(false); triggerSuccess();
             };
 
             const handleDeleteTransaction = (tx = null) => { const target = tx || txToDelete; if (!target) return; if (target.type !== 'expense') reverseTransaction(target.id); setTransactionsList(prev => prev.filter(t => t.id !== target.id)); setIsDeleteTxModalOpen(false); setTxToDelete(null); };
@@ -3031,7 +3094,7 @@
                         </div>
                     )}
                     <div ref={mainScrollRef} className="flex-1 overflow-y-auto pb-28 no-scrollbar">
-                        {activeTab === 'dashboard' && <Dashboard statsGroups={dashboardStats} ownerName={ownerName} currentFilter={dashFilter} setFilter={setDashFilter} customStart={dashCustomStart} setCustomStart={setDashCustomStart} customEnd={dashCustomEnd} setCustomEnd={setDashCustomEnd} transactions={transactionsList} onEdit={handleEditTx} onDelete={(t) => { setTxToDelete(t); setIsDeleteTxModalOpen(true); }} onViewBill={setSelectedViewTx} onStatClick={(t, f) => { if (t === 'products') { navigateToTab('products', f); } else { setContactListTab(t === 'viewSuppliers' ? 'supplier' : 'customer'); navigateToTab('ledgers'); } }} isRomanUrduEnabled={isRomanUrduEnabled} onAddExpense={() => setIsExpenseModalOpen(true)} subscription={subscription} isSubscriptionActive={isSubscriptionActive} daysLeft={daysLeft} isPrinterConnected={isPrinterConnected} isInvoicePreviewEnabled={isInvoicePreviewEnabled} productsList={productsList} />}
+                        {activeTab === 'dashboard' && <Dashboard statsGroups={dashboardStats} ownerName={ownerName} currentFilter={dashFilter} setFilter={setDashFilter} customStart={dashCustomStart} setCustomStart={setDashCustomStart} customEnd={dashCustomEnd} setCustomEnd={setDashCustomEnd} transactions={transactionsList} onEdit={handleEditTx} onDelete={(t) => { setTxToDelete(t); setIsDeleteTxModalOpen(true); }} onViewBill={setSelectedViewTx} onStatClick={(t, f) => { if (t === 'products') { navigateToTab('products', f); } else { navigateToTab('ledgers', t === 'viewSuppliers' ? 'supplier' : 'customer'); } }} isRomanUrduEnabled={isRomanUrduEnabled} onAddExpense={() => setIsExpenseModalOpen(true)} subscription={subscription} isSubscriptionActive={isSubscriptionActive} daysLeft={daysLeft} isPrinterConnected={isPrinterConnected} isInvoicePreviewEnabled={isInvoicePreviewEnabled} productsList={productsList} />}
                         {activeTab === 'pos' && (<POS productsList={productsList} addToCart={addToCart} cart={cart} cartTotal={cartTotal} setIsCheckoutModalOpen={setIsCheckoutModalOpen} posMode={posMode} setPosMode={setPosMode} isWholesaleEnabled={isWholesaleEnabled} isWholesaleMode={isWholesaleMode} setIsWholesaleMode={setIsWholesaleMode} isEditing={!!editingTxId} onCancelEdit={handleCancelEdit} setActiveTab={setActiveTab} categories={categories} query={posQuery} setQuery={setPosQuery} activeCategory={posActiveCategory} setActiveCategory={setPosActiveCategory} setStockError={setStockError} showHeader={showHeader} />)}
                         {activeTab === 'ledgers' && (activeContact ? <LedgerView contact={activeContact} transactions={transactionsList} shopName={shopName} shopPhone={shopPhone} onBack={() => { setSelectedLedger(null); handleCancelEdit(); }} onDeleteTransaction={(t) => { setTxToDelete(t); setIsDeleteTxModalOpen(true); }} onPaymentAction={(type, editTx) => { if (editTx) handleEditTx(editTx); else { setLedgerActionType(type); setIsLedgerActionModalOpen(true); } }} onViewBill={setSelectedViewTx} onDeleteAccount={(id) => { if (transactionsList.some(t => t.contactId === id)) setStockError("Is account ko delete nahi kiya ja sakta, deactivate karein."); else { setAccountToDeleteId(id); setIsDeleteAccountModalOpen(true); } }} onEditAccount={(c) => { setContactToEdit(c); setIsEditContactModalOpen(true); }} onToggleInactive={handleToggleInactive} /> : <LedgersSection contactsList={contactsList} setIsAddContactModalOpen={setIsAddContactModalOpen} setSelectedLedger={setSelectedLedger} contactListTab={contactListTab} setContactListTab={setContactListTab} onToggleInactive={handleToggleInactive} />)}
                         {activeTab === 'products' && (<ProductSection productsList={productsList} setProductsList={setProductsList} stockFilter={stockFilter} setStockFilter={setStockFilter} setIsAddModalOpen={setIsAddModalOpen} resetProductForm={resetProductForm} handleEditProduct={(p) => { setEditingProduct(p); setItemName(p.name || ""); setBarcode(p.barcode || ""); setPurchasePrice(p.purchasePrice || ""); setSalePrice(p.salePrice || ""); setWholesalePrice(p.wholesalePrice || ""); setOpeningStock(p.openingStock || ""); setMinStock(p.minStock || ""); setExpiryDate(p.expiryDate || ""); setProductImage(p.image || null); setProductCategoryId(String(p.categoryId || "all")); setIsAddModalOpen(true); }} categories={categories} setCategories={setCategories} pQuery={prodQuery} setPQuery={setProdQuery} activeCategory={prodActiveCategory} setActiveCategory={setProdActiveCategory} onPerformanceOpen={() => setActiveTab('performance')} showHeader={showHeader} />)}
@@ -3058,7 +3121,7 @@
 
                                     <div className="bg-white p-4 rounded-3xl border shadow-sm">
                                         <div className="mb-4 px-1 flex justify-between items-end">
-                                            <div>
+                                            <div onClick={handleSecretClick} className="cursor-pointer select-none">
                                                 <h3 className="text-[10px] font-black uppercase text-blue-600 tracking-[0.2em]">Your Business Card</h3>
                                                 <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Automatic Visiting Card</p>
                                             </div>
@@ -3186,7 +3249,7 @@
                                             <a href="https://wa.me/923197090233" className="flex items-center justify-center gap-2 text-green-600 font-bold text-sm bg-green-50 p-3 rounded-xl border border-green-100"><Icon name="MessageCircle" size={18} /> Contact Support: 0319-7090233</a>
                                         </div>
                                     </div>
-                                ) : (<div className="space-y-4"> <div className="flex items-center gap-4 mb-2"><button onClick={() => setSettingsView('main')} className="p-2 bg-white rounded-full shadow text-slate-600"><Icon name="ArrowLeft" size={20} /></button><h2 className="text-xl font-bold">Profile & Payment</h2></div> <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-6"> <div className="space-y-4"> <h3 className="text-[10px] font-black uppercase text-blue-600 tracking-[0.2em] border-b pb-2">Store Profile</h3> <div className="space-y-2"><label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Store Logo</label><div className="flex items-center gap-4"><div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">{shopLogo ? <img src={shopLogo} className="w-full h-full object-cover" /> : <Icon name="Image" className="text-slate-300" size={20} />}</div><button onClick={() => document.getElementById('logo_in').click()} className="bg-slate-800 text-white text-[10px] font-bold py-2 px-4 rounded-xl active:scale-95">Upload New</button></div><input type="file" id="logo_in" className="hidden" accept="image/*" onChange={(e) => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = (ev) => compressImage(ev.target.result, 300).then(res => setShopLogo(res)); r.readAsDataURL(f); } }} /></div> <div><label className="text-[10px] font-bold text-slate-400 uppercase">Shop Name</label><input type="text" value={shopName || ""} onChange={(e) => setShopName(e.target.value)} className="w-full bg-slate-50 border p-3 rounded-xl outline-none font-bold text-sm" /></div> <div><label className="text-[10px] font-bold text-slate-400 uppercase">Owner Name</label><input type="text" value={ownerName || ""} onChange={(e) => setOwnerName(e.target.value)} className="w-full bg-slate-50 border p-3 rounded-xl outline-none font-bold text-sm" /></div> <div><label className="text-[10px] font-bold text-slate-400 uppercase">Shop Phone</label><input type="text" value={shopPhone || ""} onChange={(e) => setShopPhone(e.target.value)} placeholder="0300 1234567" className="w-full bg-slate-50 border p-3 rounded-xl outline-none font-bold text-sm" /></div> <div><label className="text-[10px] font-bold text-slate-400 uppercase">Shop Address</label><textarea value={shopAddress || ""} onChange={(e) => setShopAddress(e.target.value)} rows="2" className="w-full bg-slate-50 border p-3 rounded-xl outline-none font-bold resize-none text-sm"></textarea></div> </div> <div className="space-y-4 pt-4 border-t border-slate-100"> <h3 className="text-[10px] font-black uppercase text-green-600 tracking-[0.2em] border-b pb-2">Payment Details (On Bill)</h3> <div> <label className="text-[10px] font-bold text-slate-400 uppercase">Payment Info (Text)</label> <textarea value={paymentDetails || ""} onChange={(e) => setPaymentDetails(e.target.value)} rows="3" placeholder="Easypaisa: 0300-1234567&#10;Bank: Meezan Bank (A/C: 1234...)" className="w-full bg-slate-50 border p-3 rounded-xl outline-none font-bold resize-none text-xs leading-relaxed" ></textarea> </div> <div className="space-y-2"> <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Payment QR Code</label> <div className="flex items-center gap-4"> <div className="w-16 h-16 rounded-xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden shrink-0"> {paymentQR ? <img src={paymentQR} className="w-full h-full object-cover" /> : <Icon name="QrCode" className="text-slate-300" size={24} />} </div> <div className="flex flex-col gap-2"> <button onClick={() => document.getElementById('qr_in').click()} className="bg-green-600 text-white text-[10px] font-bold py-2 px-4 rounded-xl active:scale-95">Upload QR</button> {paymentQR && <button onClick={() => setPaymentQR(null)} className="text-red-500 text-[9px] font-bold">Remove</button>} </div> </div> <input type="file" id="qr_in" className="hidden" accept="image/*" onChange={(e) => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = (ev) => compressImage(ev.target.result, 300).then(res => setPaymentQR(res)); r.readAsDataURL(f); } }} /> </div> </div> <button onClick={() => setSettingsView('main')} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold uppercase text-xs tracking-widest shadow-lg active:scale-95 transition-all">Save Profile</button> </div> </div>)}
+                                ) : (<div className="space-y-4"> <div className="flex items-center gap-4 mb-2"><button onClick={() => setSettingsView('main')} className="p-2 bg-white rounded-full shadow text-slate-600"><Icon name="ArrowLeft" size={20} /></button><h2 className="text-xl font-bold">Profile & Payment</h2></div> <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-6"> <div className="space-y-4"> <h3 className="text-[10px] font-black uppercase text-blue-600 tracking-[0.2em] border-b pb-2">Store Profile</h3> <div className="space-y-2"><label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Store Logo</label><div className="flex items-center gap-4"><div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">{shopLogo ? <img src={shopLogo} className="w-full h-full object-cover" /> : <Icon name="Image" className="text-slate-300" size={20} />}</div><button onClick={() => document.getElementById('logo_in').click()} className="bg-slate-800 text-white text-[10px] font-bold py-2 px-4 rounded-xl active:scale-95">Upload New</button></div><input type="file" id="logo_in" className="hidden" accept="image/*" onChange={(e) => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = (ev) => compressImage(ev.target.result, 300).then(res => setShopLogo(res)); r.readAsDataURL(f); } }} /></div> <div><label className="text-[10px] font-bold text-slate-400 uppercase">Shop Name</label><input type="text" value={shopName || ""} onChange={(e) => setShopName(e.target.value)} className="w-full bg-slate-50 border p-3 rounded-xl outline-none font-bold text-sm" /></div> <div><label className="text-[10px] font-bold text-slate-400 uppercase">Owner Name</label><input type="text" value={ownerName || ""} onChange={(e) => setOwnerName(e.target.value)} className="w-full bg-slate-50 border p-3 rounded-xl outline-none font-bold text-sm" /></div> <div><label className="text-[10px] font-bold text-slate-400 uppercase">Shop Phone</label><input type="text" value={shopPhone || ""} onChange={(e) => setShopPhone(e.target.value)} placeholder="0300 1234567" className="w-full bg-slate-50 border p-3 rounded-xl outline-none font-bold text-sm" /></div> <div><label className="text-[10px] font-bold text-slate-400 uppercase">Shop Address</label><textarea value={shopAddress || ""} onChange={(e) => setShopAddress(e.target.value)} rows="2" className="w-full bg-slate-50 border p-3 rounded-xl outline-none font-bold resize-none text-sm"></textarea></div> </div> <div className="space-y-4 pt-4 border-t border-slate-100"> <h3 className="text-[10px] font-black uppercase text-green-600 tracking-[0.2em] border-b pb-2">Payment Details (On Bill)</h3> <div> <label className="text-[10px] font-bold text-slate-400 uppercase">Payment Info (Text)</label> <textarea value={paymentDetails || ""} onChange={(e) => setPaymentDetails(e.target.value)} rows="3" placeholder="Easypaisa: 0300-1234567&#10;Bank: Meezan Bank (A/C: 1234...)" className="w-full bg-slate-50 border p-3 rounded-xl outline-none font-bold resize-none text-xs leading-relaxed" ></textarea> </div> <div className="space-y-2"> <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Payment QR Code</label> <div className="flex items-center gap-4"> <div className="w-16 h-16 rounded-xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden shrink-0"> {paymentQR ? <img src={paymentQR} className="w-full h-full object-cover" /> : <Icon name="QrCode" className="text-slate-300" size={24} />} </div> <div className="flex flex-col gap-2"> <button onClick={() => document.getElementById('qr_in').click()} className="bg-green-600 text-white text-[10px] font-bold py-2 px-4 rounded-xl active:scale-95">Upload QR</button> {paymentQR && <button onClick={() => setPaymentQR(null)} className="text-red-500 text-[9px] font-bold">Remove</button>} </div> </div> <input type="file" id="qr_in" className="hidden" accept="image/*" onChange={(e) => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = (ev) => compressImage(ev.target.result, 300).then(res => setPaymentQR(res)); r.readAsDataURL(f); } }} /> </div> </div> <button onClick={() => { setShopName(prev => (prev || "").trim()); setOwnerName(prev => (prev || "").trim()); setShopPhone(prev => (prev || "").trim()); setShopAddress(prev => (prev || "").trim()); setPaymentDetails(prev => (prev || "").trim()); setSettingsView('main'); }} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold uppercase text-xs tracking-widest shadow-lg active:scale-95 transition-all">Save Profile</button> </div> </div>)}
                             </div>
                         )}
                     </div>
@@ -3279,8 +3342,8 @@
                             </div>
                         </div>
                         <button onClick={() => {
-                            const n = document.getElementById('cn').value;
-                            const p = document.getElementById('cp').value;
+                            const n = document.getElementById('cn').value.trim();
+                            const p = document.getElementById('cp').value.trim();
                             const b = document.getElementById('cb').value;
 
                             const newErrors = {};
@@ -3319,7 +3382,33 @@
                             setIsAddContactModalOpen(false);
                             setContactErrors({});
                         }} className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold uppercase shadow-lg text-xs tracking-widest active:scale-95 transition-all">Save Account</button> </div> </div>)}
-                    {isEditContactModalOpen && contactToEdit && (<div className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-end justify-center"> <div className="bg-white w-full max-sm rounded-t-3xl shadow-2xl p-6 space-y-4 animate-in slide-in-from-bottom text-left"> <div className="flex justify-between items-center"><h3 className="text-xl font-bold">Edit Account</h3><button onClick={() => { setIsEditContactModalOpen(false); setContactErrors({}); }} className="p-2 text-slate-400"><Icon name="X" /></button></div> <div className="space-y-3"> <div> <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Name</label> <input id="edit_cn" type="text" defaultValue={contactToEdit.name || ""} className={`w-full bg-slate-50 border ${contactErrors.name ? 'border-red-500' : 'border-slate-50'} p-4 rounded-2xl outline-none font-semibold text-sm focus:border-blue-400`} onChange={() => setContactErrors(prev => ({ ...prev, name: false }))} /> </div> <div> <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">WhatsApp Number</label> <input id="edit_cp" type="tel" defaultValue={contactToEdit.phone || ""} maxLength={11} className={`w-full bg-slate-50 border ${contactErrors.phone ? 'border-red-500' : 'border-slate-50'} p-4 rounded-2xl outline-none font-semibold text-sm focus:border-blue-400`} onChange={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 11); setContactErrors(prev => ({ ...prev, phone: false })); }} /> </div> </div> <button onClick={() => { const n = document.getElementById('edit_cn').value; const p = document.getElementById('edit_cp').value; const newErrors = {}; if (!n) newErrors.name = true; if (p && p.length !== 11) { newErrors.phone = true; } if (Object.keys(newErrors).length > 0) { setContactErrors(newErrors); return; } setContactsList(contactsList.map(c => c.id === contactToEdit.id ? { ...c, name: n, phone: p } : c)); setTransactionsList(prev => prev.map(t => t.contactId === contactToEdit.id ? { ...t, contactName: n } : t)); setIsEditContactModalOpen(false); setContactErrors({}); }} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold uppercase shadow-lg text-xs tracking-widest active:scale-95 transition-all" > Update Details </button> </div> </div>)}
+                    {isEditContactModalOpen && contactToEdit && (<div className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-end justify-center"> <div className="bg-white w-full max-sm rounded-t-3xl shadow-2xl p-6 space-y-4 animate-in slide-in-from-bottom text-left"> <div className="flex justify-between items-center"><h3 className="text-xl font-bold">Edit Account</h3><button onClick={() => { setIsEditContactModalOpen(false); setContactErrors({}); }} className="p-2 text-slate-400"><Icon name="X" /></button></div> <div className="space-y-3"> <div> <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Name</label> <input id="edit_cn" type="text" defaultValue={contactToEdit.name || ""} className={`w-full bg-slate-50 border ${contactErrors.name ? 'border-red-500' : 'border-slate-50'} p-4 rounded-2xl outline-none font-semibold text-sm focus:border-blue-400`} onChange={() => setContactErrors(prev => ({ ...prev, name: false }))} /> </div> <div> <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">WhatsApp Number</label> <input id="edit_cp" type="tel" defaultValue={contactToEdit.phone || ""} maxLength={11} className={`w-full bg-slate-50 border ${contactErrors.phone ? 'border-red-500' : 'border-slate-50'} p-4 rounded-2xl outline-none font-semibold text-sm focus:border-blue-400`} onChange={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 11); setContactErrors(prev => ({ ...prev, phone: false })); }} /> </div> </div> <button onClick={() => { const n = document.getElementById('edit_cn').value.trim(); const p = document.getElementById('edit_cp').value.trim(); const newErrors = {}; if (!n) newErrors.name = true; if (p && p.length !== 11) { newErrors.phone = true; } if (Object.keys(newErrors).length > 0) { setContactErrors(newErrors); return; } setContactsList(contactsList.map(c => c.id === contactToEdit.id ? { ...c, name: n, phone: p } : c)); setTransactionsList(prev => prev.map(t => t.contactId === contactToEdit.id ? { ...t, contactName: n } : t)); setIsEditContactModalOpen(false); setContactErrors({}); }} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold uppercase shadow-lg text-xs tracking-widest active:scale-95 transition-all" > Update Details </button> </div> </div>)}
+
+                    {isBackupModalOpen && (
+                        <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
+                            <div className="bg-white w-full max-sm rounded-3xl p-6 text-center shadow-2xl animate-in zoom-in duration-200 text-left">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="font-bold text-lg text-slate-800">Data Backup / Restore</h3>
+                                    <button onClick={() => setIsBackupModalOpen(false)} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 active:scale-90"><Icon name="X" size={16} /></button>
+                                </div>
+                                <p className="text-xs text-slate-500 mb-6 font-medium leading-relaxed">Apna sara hisaab download karein ya pehle se save kiya hua backup (JSON file) yahan upload kar ke restore karein.</p>
+
+                                <div className="space-y-4">
+                                    <button onClick={handleExportBackup} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold uppercase text-xs tracking-widest shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all">
+                                        <Icon name="Download" size={18} /> Backup Download
+                                    </button>
+
+                                    <div className="relative">
+                                        <input type="file" accept=".json" onChange={handleImportBackup} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                        <button className="w-full py-4 bg-slate-100 text-slate-700 rounded-2xl font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-all border-2 border-dashed border-slate-300 pointer-events-none">
+                                            <Icon name="Upload" size={18} /> Backup Restore (Upload)
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {showSuccessAnimation && <SuccessAnimation />}
                 </div>
             );
