@@ -183,7 +183,13 @@
             return cleaned;
         };
 
-        const getIsoDate = (date = new Date()) => date.toISOString().split('T')[0];
+        const getIsoDate = (date = new Date()) => {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
 
         const isNearExpiry = (expiryDate) => {
             if (!expiryDate) return false;
@@ -3240,8 +3246,8 @@
                                         <div className="grid grid-cols-1 gap-3">
                                             {[
                                                 { title: 'Monthly Starter', price: '299', duration: '1 Month', color: 'border-blue-200 bg-blue-50' },
-                                                { title: 'Quarterly Saver', price: '999', duration: '3 Months', color: 'border-purple-200 bg-purple-50', popular: true },
-                                                { title: 'Annual Pro', price: '3600', duration: '1 Year', color: 'border-amber-200 bg-amber-50' }
+                                                { title: 'Quarterly Saver', price: '799', duration: '3 Months', color: 'border-purple-200 bg-purple-50', popular: true },
+                                                { title: 'Annual Pro', price: '2999', duration: '1 Year', color: 'border-amber-200 bg-amber-50' }
                                             ].map((plan, i) => (
                                                 <a
                                                     key={i}
