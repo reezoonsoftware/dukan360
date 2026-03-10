@@ -10,7 +10,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>a
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
@@ -1032,7 +1032,18 @@
                         <div className="flex-1 overflow-y-auto bg-slate-200 p-4 no-scrollbar text-center print-scroll-fix">
                             <div id="printable-invoice" style={containerStyle} className="font-mono shadow-lg rounded-sm space-y-4">
                                 <div className="text-center space-y-1">{shopLogo && <div className="flex justify-center mb-2"><img src={shopLogo} className="h-16 w-16 rounded-full object-cover" /></div>}<h4 className="text-lg font-bold uppercase">{shopName}</h4>{shopAddress && <p className={`text-slate-500 leading-tight ${is58mm ? 'text-[9px]' : 'text-[10px]'}`}>{shopAddress}</p>}{shopPhone && <p className={`text-slate-500 ${is58mm ? 'text-[9px]' : 'text-[10px]'}`}>Contact: {shopPhone}</p>}<div className="mt-3 py-1 bg-slate-100 rounded-lg"><p className="text-[11px] font-black tracking-[0.2em]">{getTypeLabel(tx.type)}</p></div></div>
-                                <div className={`flex justify-between ${is58mm ? 'text-[9px]' : 'text-[10px]'}`}><span>INV#: {tx.id}</span><span className="text-right">{tx.date}<br />{tx.time}</span></div>
+                                <div className={`flex justify-between items-start ${is58mm ? 'text-[9px]' : 'text-[10px]'}`}>
+                                    <div className="text-left">
+                                        <span>INV#: {tx.id}</span>
+                                        {tx.paymentType === 'Credit' && tx.contactName && (
+                                            <div className="font-bold mt-1 text-slate-800 tracking-tight">Name: {tx.contactName}</div>
+                                        )}
+                                    </div>
+                                    <div className="text-right leading-tight">
+                                        <span>{tx.date}</span><br />
+                                        <span>{tx.time}</span>
+                                    </div>
+                                </div>
                                 <div className="border-t border-dashed"></div>
                                 {tx.items && tx.items.length > 0 && (<><div className="space-y-2">{tx.items.map((item, idx) => (<div key={idx} className="flex justify-between items-start text-left"><div className="flex-1 pr-2"><p className="font-bold">{item.name}</p><p className={`text-slate-500 ${is58mm ? 'text-[9px]' : 'text-[10px]'}`}>{item.quantity} x {formatAmount(item.priceUsed)}</p></div><p className="font-bold">Rs. {formatAmount(item.quantity * item.priceUsed)}</p></div>))}</div><div className="border-t border-dashed"></div></>)}
                                 <div className="space-y-1">{discount > 0 && (<><div className={`flex justify-between font-bold ${is58mm ? 'text-[9px]' : 'text-[10px]'}`}><span>SUBTOTAL</span><span>Rs. {formatAmount(subtotal)}</span></div><div className={`flex justify-between font-bold text-red-600 ${is58mm ? 'text-[9px]' : 'text-[10px]'}`}><span>DISCOUNT {tx.discountType === 'percent' ? `(${tx.discountValue}%)` : ''}</span><span>- Rs. {formatAmount(discount)}</span></div></>)}<div className={`flex justify-between font-bold ${is58mm ? 'text-[11px]' : 'text-lg'}`}><span>TOTAL BILL</span><span>Rs. {formatAmount(netAmount)}</span></div>{tx.paymentType === 'Credit' && (<div className="pt-2 border-t border-dotted mt-1"><div className={`flex justify-between font-bold text-blue-700 ${is58mm ? 'text-[9px]' : 'text-[10px]'}`}><span>{tx.type.includes('return') ? 'REFUNDED (WAPIS KIYE)' : 'PAID (ADA SHUDA)'}</span><span>Rs. {formatAmount(paid)}</span></div>{balanceDue > 0 && (<div className={`flex justify-between font-black text-red-600 mt-1 bg-red-50 p-1 rounded ${is58mm ? 'text-[10px]' : 'text-xs'}`}><span>BALANCE (BAQAYA)</span><span>Rs. {formatAmount(balanceDue)}</span></div>)}</div>)}</div>
@@ -2973,6 +2984,16 @@
                 const processedCart = cart.map(item => { const prod = updatedProducts.find(p => p.id === item.id); return { ...item, costUsedForProfit: prod ? (prod.avgCost || prod.purchasePrice) : item.purchasePrice }; });
                 const invoiceId = editingTxId || invCounter; if (!editingTxId) setInvCounter(prev => prev + 1);
 
+                let originalDate = getIsoDate();
+                let originalTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                if (editingTxId) {
+                    const originalTx = transactionsList.find(t => t.id === editingTxId);
+                    if (originalTx) {
+                        originalDate = originalTx.date || originalDate;
+                        originalTime = originalTx.time || originalTime;
+                    }
+                }
+
                 const newTx = {
                     id: invoiceId,
                     type: posMode,
@@ -2986,8 +3007,8 @@
                     amount: finalNetTotal,
                     paidAmount: recordedPaidAmount,
                     items: processedCart,
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    date: getIsoDate()
+                    time: originalTime,
+                    date: originalDate
                 };
 
                 if (contact) {
@@ -3064,7 +3085,17 @@
                 const actionId = editingTxId || invCounter;
                 if (!editingTxId) setInvCounter(prev => prev + 1);
 
-                const newTx = { id: actionId, type: ledgerActionType, contactId: activeContact.id, contactName: activeContact.name, amount, paidAmount: amount, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), date: getIsoDate(), description: ledgerDesc.trim(), paymentType: 'Credit' };
+                let originalDate = getIsoDate();
+                let originalTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                if (editingTxId) {
+                    const originalTx = transactionsList.find(t => t.id === editingTxId);
+                    if (originalTx) {
+                        originalDate = originalTx.date || originalDate;
+                        originalTime = originalTx.time || originalTime;
+                    }
+                }
+
+                const newTx = { id: actionId, type: ledgerActionType, contactId: activeContact.id, contactName: activeContact.name, amount, paidAmount: amount, time: originalTime, date: originalDate, description: ledgerDesc.trim(), paymentType: 'Credit' };
 
                 let balAdj = 0;
                 if (ledgerActionType === 'receipt') balAdj = amount;
@@ -3086,7 +3117,22 @@
 
             const handleAddExpenseAction = () => {
                 if (!checkPermission()) return; // Block if expired
-                if (!expenseAmount || !expenseDesc) return; if (editingTxId) setTransactionsList(prev => prev.filter(t => t.id !== editingTxId)); const amount = parseFloat(expenseAmount); const actionId = editingTxId || invCounter; if (!editingTxId) setInvCounter(prev => prev + 1); const newTx = { id: actionId, type: 'expense', description: expenseDesc.trim(), amount, paidAmount: amount, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), date: expenseDate }; setTransactionsList(prev => [newTx, ...prev]); setExpenseAmount(""); setExpenseDesc(""); setExpenseDate(getIsoDate()); setEditingTxId(null); setIsExpenseModalOpen(false); triggerSuccess();
+                if (!expenseAmount || !expenseDesc) return; 
+                
+                let originalTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                if (editingTxId) {
+                    const originalTx = transactionsList.find(t => t.id === editingTxId);
+                    if (originalTx) {
+                        originalTime = originalTx.time || originalTime;
+                    }
+                    setTransactionsList(prev => prev.filter(t => t.id !== editingTxId)); 
+                }
+                
+                const amount = parseFloat(expenseAmount); const actionId = editingTxId || invCounter; if (!editingTxId) setInvCounter(prev => prev + 1); 
+                
+                const newTx = { id: actionId, type: 'expense', description: expenseDesc.trim(), amount, paidAmount: amount, time: originalTime, date: expenseDate }; 
+                
+                setTransactionsList(prev => [newTx, ...prev]); setExpenseAmount(""); setExpenseDesc(""); setExpenseDate(getIsoDate()); setEditingTxId(null); setIsExpenseModalOpen(false); triggerSuccess();
             };
 
             const handleDeleteTransaction = (tx = null) => { const target = tx || txToDelete; if (!target) return; if (target.type !== 'expense') reverseTransaction(target.id); setTransactionsList(prev => prev.filter(t => t.id !== target.id)); setIsDeleteTxModalOpen(false); setTxToDelete(null); };
