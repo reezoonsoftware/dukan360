@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dukan360</title>
+    <!-- Offline PWA Manifest -->
+    <link rel="manifest" href='data:application/manifest+json;utf8,{"name":"Dukan360","short_name":"Dukan360","start_url":".","display":"standalone","background_color":"#f8fafc","theme_color":"#2563eb","icons":[{"src":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzI1NjNlYiI+PHBhdGggZD0iTTEyIDJMMiAyMmgyMGwtMTAtMjB6Ii8+PC9zdmc+","sizes":"192x192","type":"image/svg+xml"}]}'>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -14,6 +17,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- Firebase SDK Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -136,6 +144,30 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
+        // --- FIREBASE INITIALIZATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBezCctgmDLW4Kg_3vHUvvobfjCUHZY654",
+            authDomain: "dukan360pk-9df7f.firebaseapp.com",
+            projectId: "dukan360pk-9df7f",
+            storageBucket: "dukan360pk-9df7f.firebasestorage.app",
+            messagingSenderId: "1091629212703",
+            appId: "1:1091629212703:web:d07df878057a02c838a12a",
+            measurementId: "G-2W1VMMQFC3"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        
+        // Enable offline persistence
+        db.enablePersistence().catch((err) => {
+            if (err.code === 'failed-precondition') {
+                console.warn('Multiple tabs open, persistence can only be enabled in one tab at a a time.');
+            } else if (err.code === 'unimplemented') {
+                console.warn('The current browser does not support all of the features required to enable persistence');
+            }
+        });
+
         // --- GLOBAL AUDIO CONTEXT ---
         let globalAudioCtx = null;
         const getAudioContext = () => {
@@ -159,13 +191,51 @@
                 } catch (e) { return initialValue; }
             });
 
+            // Sync with Firestore if logged in
+            useEffect(() => {
+                return auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        const docRef = db.collection('users').doc(user.uid).collection('data').doc(key);
+                        // Listen for real-time updates from Firestore
+                        const unsubscribe = docRef.onSnapshot((docSnapshot) => {
+                            if (docSnapshot.exists) {
+                                const source = docSnapshot.metadata.hasPendingWrites ? 'Local' : 'Server';
+                                // Only update state from server to avoid overwriting pending local writes
+                                if (source === 'Server') {
+                                    const data = docSnapshot.data().value;
+                                    setState(data);
+                                    localStorage.setItem(namespacedKey, JSON.stringify(data));
+                                }
+                            } else {
+                                // If document doesn't exist on server but we have local data, upload it
+                                const localData = localStorage.getItem(namespacedKey);
+                                if (localData) {
+                                    docRef.set({ value: JSON.parse(localData), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }).catch(e => console.error(e));
+                                }
+                            }
+                        });
+                        return () => unsubscribe();
+                    }
+                });
+            }, [key, namespacedKey]);
+
             const setLocalState = useCallback((newValue) => {
                 setState(prev => {
                     const updated = typeof newValue === 'function' ? newValue(prev) : newValue;
                     localStorage.setItem(namespacedKey, JSON.stringify(updated));
+                    
+                    // Push to Firestore if logged in
+                    const user = auth.currentUser;
+                    if (user) {
+                        db.collection('users').doc(user.uid).collection('data').doc(key).set({
+                            value: updated,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true }).catch(err => console.error("Firestore sync error:", err));
+                    }
+                    
                     return updated;
                 });
-            }, [namespacedKey]);
+            }, [key, namespacedKey]);
 
             return [state, setLocalState];
         };
@@ -2087,246 +2157,119 @@
         };
 
         // --- AUTHENTICATION COMPONENTS ---
-        const Login = ({ onSwitchToSignup }) => {
-            const [email, setEmail] = useState("");
-            const [password, setPassword] = useState("");
-            const [error, setError] = useState("");
+        const Login = ({ onLogin }) => {
             const [loading, setLoading] = useState(false);
-            const [resetMsg, setResetMsg] = useState("");
-
+            const [emailLoading, setEmailLoading] = useState(false);
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
             const [showPassword, setShowPassword] = useState(false);
-
-            // New state for Forgot Password Modal
-            const [showForgotModal, setShowForgotModal] = useState(false);
-            const [forgotEmail, setForgotEmail] = useState("");
-            const [forgotStatus, setForgotStatus] = useState({ type: '', msg: '' });
-            const [forgotLoading, setForgotLoading] = useState(false);
-
-            const mapError = (err) => {
-                if (err.includes('auth/invalid-credential') || err.includes('auth/wrong-password') || err.includes('auth/user-not-found')) {
-                    return "Ghalat Email ya Password! Dubara check karein.";
-                }
-                if (err.includes('auth/invalid-email')) {
-                    return "Email ka format theek nahi hai.";
-                }
-                if (err.includes('auth/missing-email')) {
-                    return "Pehle apna email darj karein.";
-                }
-                return err;
-            };
-
-            const handleLogin = async (e) => {
-                e.preventDefault();
-                setLoading(true);
-                setError("");
-                setResetMsg("");
-                try {
-                    await auth.signInWithEmailAndPassword(email.trim(), password);
-                } catch (err) {
-                    setError(mapError(err.message));
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            const openForgotModal = () => {
-                setForgotEmail(email); // Pre-fill with entered email if any
-                setForgotStatus({ type: '', msg: '' });
-                setShowForgotModal(true);
-            };
-
-            const submitForgotPassword = async (e) => {
-                e.preventDefault();
-                if (!forgotEmail.trim()) {
-                    setForgotStatus({ type: 'error', msg: "Pehle apna email darj karein." });
-                    return;
-                }
-                setForgotLoading(true);
-                setForgotStatus({ type: '', msg: '' });
-                try {
-                    await auth.sendPasswordResetEmail(forgotEmail.trim());
-                    setForgotStatus({
-                        type: 'success',
-                        msg: "Password reset link aapke email par bhej diya gaya hai. Baraye meherbani apna inbox check karein. (Agar na mile toh Spam folder zaroor dekhein)."
-                    });
-                } catch (err) {
-                    setForgotStatus({ type: 'error', msg: mapError(err.message) });
-                } finally {
-                    setForgotLoading(false);
-                }
-            };
+            const [isSignUp, setIsSignUp] = useState(false);
 
             const handleGoogleSignIn = async () => {
                 setLoading(true);
-                setError("");
-                setResetMsg("");
                 try {
-                    await auth.signInWithPopup(googleProvider);
-                } catch (err) {
-                    setError(mapError(err.message));
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    await auth.signInWithPopup(provider);
+                    onLogin();
+                } catch (error) {
+                    console.error(error);
+                    alert("Google Sign In Error: " + error.message);
                 } finally {
                     setLoading(false);
                 }
             };
 
-            return (
-                <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-slate-800 text-left overflow-y-auto">
-                    <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in duration-500 my-8">
-                        <div className="text-center">
-                            <h1 className="text-4xl font-black tracking-tighter text-slate-900">Dukan<span className="text-blue-500">360</span></h1>
-                        </div>
-
-                        <div className="bg-white border border-slate-200 p-8 rounded-[2rem] shadow-xl">
-                            <h2 className="text-xl font-bold mb-6">Welcome Back</h2>
-                            <form onSubmit={handleLogin} className="space-y-4">
-                                <div>
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Email Address</label>
-                                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:border-blue-500 transition-all font-bold" placeholder="your@email.com" required />
-                                </div>
-                                <div>
-                                    <div className="flex justify-between items-center ml-1 mb-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Password</label>
-                                        <button type="button" onClick={openForgotModal} className="text-[10px] font-bold text-blue-500 hover:text-blue-600 transition-colors">Forgot Password?</button>
-                                    </div>
-                                    <div className="relative">
-                                        <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:border-blue-500 transition-all font-bold pr-12" placeholder="••••••••" required />
-                                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-500 transition-colors">
-                                            <Icon name={showPassword ? "EyeOff" : "Eye"} size={20} />
-                                        </button>
-                                    </div>
-                                </div>
-                                {error && <p className="text-red-500 text-[11px] font-bold mt-2 bg-red-50 p-3 rounded-xl border border-red-100">{error}</p>}
-                                {resetMsg && <p className="text-green-600 text-[11px] font-bold mt-2 bg-green-50 p-3 rounded-xl border border-green-100">{resetMsg}</p>}
-                                <button type="submit" disabled={loading} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
-                                    {loading ? <span className="animate-spin border-2 border-white/30 border-t-white rounded-full w-4 h-4"></span> : "Sign In"}
-                                </button>
-                            </form>
-
-                            <button onClick={handleGoogleSignIn} disabled={loading} className="w-full mt-3 py-4 bg-slate-50 border border-slate-200 text-slate-900 rounded-2xl font-black text-xs tracking-widest shadow-sm active:scale-95 transition-all flex items-center justify-center gap-3">
-                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
-                                Continue with Google
-                            </button>
-                        </div>
-
-                        <p className="text-center text-slate-400 text-sm">
-                            Don't have an account? <button onClick={onSwitchToSignup} className="text-blue-500 font-bold hover:underline">Create Account</button>
-                        </p>
-                    </div>
-
-                    {/* Forgot Password Modal */}
-                    {showForgotModal && (
-                        <div className="fixed inset-0 z-[200] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
-                            <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in zoom-in duration-300">
-                                <div className="flex justify-between items-center mb-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center">
-                                            <Icon name="Key" size={20} />
-                                        </div>
-                                        <h3 className="text-lg font-bold text-slate-800">Reset Password</h3>
-                                    </div>
-                                    <button onClick={() => setShowForgotModal(false)} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 active:scale-90"><Icon name="X" size={16} /></button>
-                                </div>
-                                <form onSubmit={submitForgotPassword} className="space-y-4">
-                                    <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Enter Email Address</label>
-                                        <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:border-blue-500 transition-all font-bold text-sm" placeholder="your@email.com" required />
-                                    </div>
-                                    {forgotStatus.msg && (
-                                        <div className={`p-4 rounded-2xl border text-[11px] font-bold leading-relaxed flex gap-3 items-start ${forgotStatus.type === 'success' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-600 border-red-100'}`}>
-                                            <Icon name={forgotStatus.type === 'success' ? 'CheckCircle2' : 'AlertCircle'} size={18} className="shrink-0 mt-0.5" />
-                                            <p>{forgotStatus.msg}</p>
-                                        </div>
-                                    )}
-                                    <button type="submit" disabled={forgotLoading} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
-                                        {forgotLoading ? <span className="animate-spin border-2 border-white/30 border-t-white rounded-full w-4 h-4"></span> : "Send Reset Link"}
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
-        };
-
-        const Signup = ({ onSwitchToLogin }) => {
-            const [email, setEmail] = useState("");
-            const [password, setPassword] = useState("");
-            const [confirmPassword, setConfirmPassword] = useState("");
-            const [error, setError] = useState("");
-            const [loading, setLoading] = useState(false);
-
-            const [showPassword, setShowPassword] = useState(false);
-            const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-            const mapError = (err) => {
-                if (err.includes('auth/email-already-in-use')) {
-                    return "Is Email par pehle hi account bana hua hai.";
-                }
-                if (err.includes('auth/weak-password')) {
-                    return "Password kam az kam 6 characters ka hona chahiye.";
-                }
-                if (err.includes('auth/invalid-email')) {
-                    return "Email ka format theek nahi hai.";
-                }
-                return err;
-            };
-
-            const handleSignup = async (e) => {
+            const handleEmailSubmit = async (e) => {
                 e.preventDefault();
-                if (password !== confirmPassword) return setError("Passwords aik jaisay nahi hain.");
-                setLoading(true);
-                setError("");
+                if(!email || !password) {
+                    alert("Email aur Password dono zaroori hain.");
+                    return;
+                }
+                setEmailLoading(true);
                 try {
-                    await auth.createUserWithEmailAndPassword(email.trim(), password);
-                } catch (err) {
-                    setError(mapError(err.message));
+                    if (isSignUp) {
+                        await auth.createUserWithEmailAndPassword(email, password);
+                    } else {
+                        await auth.signInWithEmailAndPassword(email, password);
+                    }
+                    onLogin();
+                } catch (error) {
+                    console.error(error);
+                    alert("Auth Error: " + error.message);
                 } finally {
-                    setLoading(false);
+                    setEmailLoading(false);
+                }
+            };
+
+            const handleForgot = async () => {
+                if(!email) {
+                    alert("Pehle apna email enter karein taake reset link bheja ja sake.");
+                } else {
+                    try {
+                        await auth.sendPasswordResetEmail(email);
+                        alert("Password reset link " + email + " par bhej diya gaya hai.");
+                    } catch (error) {
+                        alert("Reset Error: " + error.message);
+                    }
                 }
             };
 
             return (
-                <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-slate-800 text-left overflow-y-auto">
-                    <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in duration-500 my-8">
-                        <div className="text-center">
-                            <h1 className="text-4xl font-black tracking-tighter text-slate-900">Dukan<span className="text-green-500">360</span></h1>
+                <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-slate-800 text-left overflow-hidden">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.05)_0,transparent_100%)] pointer-events-none"></div>
+                    <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in duration-500 relative z-10">
+                        <div className="text-center mt-2">
+                            <h1 className="text-5xl font-black tracking-tighter text-slate-900 mb-2">Dukan<span className="text-blue-600">360</span></h1>
                         </div>
 
-                        <div className="bg-white border border-slate-200 p-8 rounded-[2rem] shadow-xl">
-                            <h2 className="text-xl font-bold mb-6">Create Account</h2>
-                            <form onSubmit={handleSignup} className="space-y-4">
+                        <div className="bg-white border border-slate-200 p-8 rounded-[2rem] shadow-2xl">
+                            <h2 className="text-xl font-bold mb-6 text-center text-slate-800">
+                                {isSignUp ? 'Create a new account' : 'Welcome Back'}
+                            </h2>
+                            
+                            <form onSubmit={handleEmailSubmit} className="space-y-4 mb-6">
                                 <div>
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Email Address</label>
-                                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:border-green-500 transition-all font-bold" placeholder="your@email.com" required />
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Email</label>
+                                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl outline-none font-bold text-sm focus:border-blue-500 transition-all" placeholder="Enter your email" />
                                 </div>
-                                <div>
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Password</label>
-                                    <div className="relative">
-                                        <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:border-green-500 transition-all font-bold pr-12" placeholder="••••••••" required />
-                                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-green-500 transition-colors">
-                                            <Icon name={showPassword ? "EyeOff" : "Eye"} size={20} />
-                                        </button>
+                                
+                                <div className="relative">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Password</label>
+                                    <input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-3 pr-10 rounded-xl outline-none font-bold text-sm focus:border-blue-500 transition-all" placeholder={isSignUp ? "Create a password" : "Enter your password"} />
+                                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 bottom-3 text-slate-400 hover:text-blue-600 transition-colors outline-none">
+                                        <Icon name={showPassword ? "EyeOff" : "Eye"} size={18} />
+                                    </button>
+                                </div>
+
+                                {!isSignUp && (
+                                    <div className="text-right -mt-1 mb-2">
+                                        <button type="button" onClick={handleForgot} className="text-[10px] font-bold text-blue-600 hover:underline outline-none">Forgot Password?</button>
                                     </div>
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Confirm Password</label>
-                                    <div className="relative">
-                                        <input type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:border-green-500 transition-all font-bold pr-12" placeholder="••••••••" required />
-                                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-green-500 transition-colors">
-                                            <Icon name={showConfirmPassword ? "EyeOff" : "Eye"} size={20} />
-                                        </button>
-                                    </div>
-                                </div>
-                                {error && <p className="text-red-500 text-[11px] font-bold mt-2 bg-red-50 p-3 rounded-xl border border-red-100">{error}</p>}
-                                <button type="submit" disabled={loading} className="w-full py-4 bg-green-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
-                                    {loading ? <span className="animate-spin border-2 border-white/30 border-t-white rounded-full w-4 h-4"></span> : "Sign Up"}
+                                )}
+
+                                <button type="submit" disabled={emailLoading} className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-sm tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 mt-2">
+                                    {emailLoading ? <span className="animate-spin border-4 border-white/20 border-t-white rounded-full w-5 h-5"></span> : (isSignUp ? 'Sign Up' : 'Log In')}
                                 </button>
                             </form>
-                        </div>
+                            
+                            <button onClick={handleGoogleSignIn} disabled={loading} className="w-full py-3.5 bg-black hover:bg-slate-800 text-white rounded-xl font-black text-sm tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-3">
+                                {loading ? (
+                                    <span className="animate-spin border-4 border-white/20 border-t-white rounded-full w-5 h-5"></span>
+                                ) : (
+                                    <>
+                                        <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 15.01 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                                        Continue with Google
+                                    </>
+                                )}
+                            </button>
 
-                        <p className="text-center text-slate-400 text-sm">
-                            Already have an account? <button onClick={onSwitchToLogin} className="text-green-500 font-bold hover:underline">Sign In</button>
-                        </p>
+                            <p className="text-center text-xs font-bold text-slate-500 mt-6 pt-4 border-t border-slate-100">
+                                {isSignUp ? "Already have an account? " : "Don't have an account? "}
+                                <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-blue-600 hover:underline outline-none">
+                                    {isSignUp ? "Log In" : "Sign Up"}
+                                </button>
+                            </p>
+                        </div>
                     </div>
                 </div>
             );
@@ -2334,6 +2277,19 @@
 
         const AppContent = () => {
             const [activeTab, setActiveTab] = useState('dashboard');
+
+            // --- OFFLINE STATE ---
+            const [isOffline, setIsOffline] = useState(!navigator.onLine);
+            useEffect(() => {
+                const handleOnline = () => setIsOffline(false);
+                const handleOffline = () => setIsOffline(true);
+                window.addEventListener('online', handleOnline);
+                window.addEventListener('offline', handleOffline);
+                return () => {
+                    window.removeEventListener('online', handleOnline);
+                    window.removeEventListener('offline', handleOffline);
+                };
+            }, []);
 
             const [posMode, setPosMode] = useState('sale');
             const [isWholesaleMode, setIsWholesaleMode] = useState(false);
@@ -3149,6 +3105,12 @@
 
             return (
                 <div className="max-w-md mx-auto bg-slate-50 h-[100dvh] w-full relative shadow-2xl overflow-hidden flex flex-col border-x no-scrollbar text-left" onScrollCapture={handleGlobalScroll}>
+                    {isOffline && (
+                        <div className="bg-orange-500 text-white text-[10px] font-bold text-center py-1 uppercase tracking-widest flex items-center justify-center gap-2 z-[100] relative shrink-0">
+                            <Icon name="WifiOff" size={12} />
+                            Aap Offline Hain - App Chal Rahi Hai
+                        </div>
+                    )}
                     {activeTab !== 'performance' && (
                         <div className={`bg-blue-600 text-white shadow-lg z-[60] flex items-center justify-between rounded-b-3xl shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${showHeader ? 'max-h-24 p-4 opacity-100' : 'max-h-0 py-0 px-4 opacity-0 border-none'}`}>
                             <div className="flex items-center gap-3">{shopLogo ? (<img src={shopLogo} className="w-9 h-9 rounded-full object-cover border-2 border-white/50" />) : (<div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center border border-white/30"><Icon name="Store" size={20} /></div>)}<h2 className="text-xl font-black uppercase truncate tracking-tight">{shopName || "Store"}</h2></div>
@@ -3248,6 +3210,10 @@
                                                     </div>
                                                 </div>
                                             )}
+                                        </div>
+                                        <div onClick={() => { if(window.confirm('Aap waqai Logout karna chahte hain?')) { auth.signOut().then(() => { localStorage.removeItem('guest_gs_v4_auth'); window.location.reload(); }); } }} className="flex items-center gap-4 p-4 font-bold text-sm text-red-500 active:bg-slate-50 cursor-pointer border-t">
+                                            <Icon name="LogOut" className="text-red-500" />
+                                            <span className="flex-1">Log Out</span>
                                         </div>
                                     </div>
                                 </>) : settingsView === 'premium' ? (
@@ -3485,12 +3451,76 @@
         }
 
         const App = () => {
+            const [isAuthenticated, setIsAuthenticated] = useLocalStorage('gs_v4_auth', false);
+
+            if (!isAuthenticated) {
+                return <Login onLogin={() => setIsAuthenticated(true)} />;
+            }
+
             return <AppContent />;
         };
 
         const rootInstance = ReactDOM.createRoot(document.getElementById('root'));
         rootInstance.render(<App />);
     </script>
-</body>
 
+    <!-- Offline Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    const CACHE_NAME = 'dukan360-offline-v1';
+                    const urlsToCache = [
+                        'https://cdn.tailwindcss.com',
+                        'https://unpkg.com/react@18/umd/react.development.js',
+                        'https://unpkg.com/react-dom@18/umd/react-dom.development.js',
+                        'https://unpkg.com/@babel/standalone/babel.min.js',
+                        'https://unpkg.com/lucide@latest',
+                        'https://unpkg.com/html5-qrcode',
+                        'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+                        'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+                        'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js'
+                    ];
+
+                    self.addEventListener('install', event => {
+                        self.skipWaiting();
+                        event.waitUntil(
+                            caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)).catch(() => {})
+                        );
+                    });
+
+                    self.addEventListener('activate', event => {
+                        event.waitUntil(self.clients.claim());
+                    });
+
+                    self.addEventListener('fetch', event => {
+                        if (event.request.method !== 'GET') return;
+                        event.respondWith(
+                            caches.match(event.request).then(response => {
+                                if (response) return response;
+                                return fetch(event.request).then(fetchRes => {
+                                    if (!fetchRes || fetchRes.status !== 200 || fetchRes.type === 'error') {
+                                        return fetchRes;
+                                    }
+                                    const responseToCache = fetchRes.clone();
+                                    caches.open(CACHE_NAME).then(cache => {
+                                        cache.put(event.request, responseToCache);
+                                    });
+                                    return fetchRes;
+                                }).catch(() => {
+                                    // Offline fallback ignored to let app continue seamlessly
+                                });
+                            })
+                        );
+                    });
+                `;
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl).then(() => {
+                    console.log('App is now Offline-Ready! 🚀');
+                }).catch(err => console.log('SW Registration failed', err));
+            });
+        }
+    </script>
+</body>
 </html>
